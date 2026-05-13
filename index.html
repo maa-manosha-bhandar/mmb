@@ -4,50 +4,179 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dukaan Pro</title>
+<title>Maa Manosha Bhandar</title>
+
+<link rel="manifest" href="manifest.json">
+
 <style>
-body{font-family:Arial;background:#fff7f0;margin:0;max-width:700px;margin:auto}
-header{background:#ff6b00;color:#fff;padding:16px}
-.tabs{display:flex;background:#fff}
-.tab{flex:1;padding:14px;border:none;background:none;font-weight:bold}
-.active{border-bottom:4px solid #ff6b00;color:#ff6b00}
-.panel{display:none;padding:14px}
-.panel.active{display:block}
-.card{background:#fff;padding:16px;border-radius:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-input,select{width:100%;padding:12px;margin-top:10px;border:1px solid #ddd;border-radius:10px;box-sizing:border-box}
-button{border:none;cursor:pointer}
-.btn{background:#ff6b00;color:#fff;padding:12px;border-radius:10px;width:100%;margin-top:10px}
-.row{display:flex;gap:10px}
-.product,.bill-item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px dashed #ddd}
-.big{font-size:32px;font-weight:bold;color:green}
-.mic{width:90px;height:90px;border-radius:50%;background:#ff6b00;color:#fff;font-size:35px}
-.suggestions{max-height:200px;overflow:auto;border:1px solid #ddd;border-radius:10px;margin-top:8px}
-.s-item{padding:10px;border-bottom:1px solid #eee;cursor:pointer}
+body{
+font-family:Arial,sans-serif;
+margin:0;
+background:#f8f4ec;
+max-width:720px;
+margin:auto;
+}
+
+header{
+background:#0b4d2c;
+color:white;
+padding:14px;
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+header img{
+width:70px;
+height:70px;
+border-radius:50%;
+object-fit:cover;
+background:white;
+}
+
+.tabs{
+display:flex;
+background:white;
+position:sticky;
+top:0;
+z-index:10;
+}
+
+.tab{
+flex:1;
+padding:14px;
+border:none;
+background:none;
+font-weight:bold;
+font-size:16px;
+}
+
+.tab.active{
+border-bottom:4px solid #0b4d2c;
+color:#0b4d2c;
+}
+
+.panel{
+display:none;
+padding:14px;
+}
+
+.panel.active{
+display:block;
+}
+
+.card{
+background:white;
+padding:16px;
+border-radius:16px;
+margin-bottom:14px;
+box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+input,select{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ddd;
+box-sizing:border-box;
+}
+
+button{
+border:none;
+cursor:pointer;
+}
+
+.btn{
+background:#0b4d2c;
+color:white;
+padding:13px;
+width:100%;
+border-radius:12px;
+margin-top:10px;
+}
+
+.row{
+display:flex;
+gap:10px;
+}
+
+.mic{
+width:90px;
+height:90px;
+border-radius:50%;
+font-size:34px;
+background:#0b4d2c;
+color:white;
+}
+
+.product,.bill-item{
+display:flex;
+justify-content:space-between;
+padding:12px 0;
+border-bottom:1px dashed #ddd;
+}
+
+.big{
+font-size:34px;
+font-weight:bold;
+color:green;
+}
+
+.suggestions{
+max-height:220px;
+overflow:auto;
+border:1px solid #ddd;
+border-radius:10px;
+margin-top:8px;
+}
+
+.s-item{
+padding:10px;
+border-bottom:1px solid #eee;
+cursor:pointer;
+}
+
 @media print{
-.no-print{display:none!important}
-body{background:#fff}
+.no-print{
+display:none !important;
+}
+
+body{
+background:white;
+}
+
+.card{
+box-shadow:none;
+border:none;
+}
+
 }
 </style>
 </head>
 <body>
 
 <header class="no-print">
-<h1>🛒 Dukaan Pro</h1>
-<p>GitHub Pages Ready Smart Billing</p>
+<img src="https://dummyimage.com/120x120/0b4d2c/ffffff&text=MMB">
+<div>
+<h2 style="margin:0">Maa Manosha Bhandar</h2>
+<div>Smart Grocery Billing</div>
+</div>
 </header>
 
 <div class="tabs no-print">
-<button id="t1" class="tab active" onclick="openTab('inventory','t1')">Inventory</button>
-<button id="t2" class="tab" onclick="openTab('billing','t2')">Billing</button>
+<button class="tab active" id="tabInv" onclick="openTab('inventory','tabInv')">Inventory</button>
+<button class="tab" id="tabBill" onclick="openTab('billing','tabBill')">Billing</button>
 </div>
 
 <div id="inventory" class="panel active">
 
 <div class="card">
-<h2>Add Product</h2>
+<h3>Add / Edit Product</h3>
 
-<input id="pname" placeholder="Name">
-<input id="palias" placeholder="Aliases">
+<input id="pname" placeholder="Product Name">
+
+<input id="palias" placeholder="Aliases comma separated">
 
 <div class="row">
 <select id="punit">
@@ -61,15 +190,17 @@ body{background:#fff}
 <option>litre</option>
 </select>
 
-<input id="pprice" type="number" placeholder="Price">
+<input id="pbaseqty" type="number" value="1" placeholder="Base Qty">
 </div>
+
+<input id="pprice" type="number" placeholder="Price">
 
 <button class="btn" onclick="saveProduct()">Save Product</button>
 
 </div>
 
 <div class="card">
-<h2>Inventory</h2>
+<h3>Inventory</h3>
 <div id="inventoryList"></div>
 </div>
 
@@ -81,10 +212,10 @@ body{background:#fff}
 
 <button class="mic" onclick="startVoice()">🎤</button>
 
-<div id="heard" style="margin-top:10px"></div>
+<div id="heard" style="margin-top:12px"></div>
 
 <div class="row">
-<input id="qty" placeholder="Qty">
+<input id="qty" placeholder="Quantity">
 <select id="unit">
 <option>kg</option>
 <option>gm</option>
@@ -97,7 +228,7 @@ body{background:#fff}
 </select>
 </div>
 
-<input id="search" oninput="searchItems()" placeholder="Search item">
+<input id="search" placeholder="Search item manually" oninput="searchItems()">
 
 <div id="suggestions" class="suggestions"></div>
 
@@ -113,26 +244,60 @@ body{background:#fff}
 </div>
 
 <div class="card">
-<h2>Dukaan Bill</h2>
+<h2 style="text-align:center">Maa Manosha Bhandar</h2>
 <div id="billDate"></div>
+
 <div id="billList"></div>
+
 <div class="big" id="grand">₹0</div>
 
 <div class="no-print">
 <button class="btn" onclick="window.print()">Print Bill</button>
 <button class="btn" onclick="clearBill()">Clear Bill</button>
 </div>
+
 </div>
 
 </div>
 
 <script>
 
-const STORE="dukaan_pro_store";
-const BILL="dukaan_pro_bill";
+const STORE="maa_manosha_inventory";
+const BILL="maa_manosha_bill";
 
-let products=[{"name": "Maida", "unit": "kg", "price": 34, "aliases": ["maida", "moyda", "noida"]}, {"name": "Egg", "unit": "tray", "price": 210, "aliases": ["egg", "dim"]}, {"name": "Maggi", "unit": "pack", "price": 7, "aliases": ["maggi", "maggie"]}, {"name": "Sugar", "unit": "kg", "price": 48, "aliases": ["sugar", "chini"]}, {"name": "Mustard Oil", "unit": "pack", "price": 175, "aliases": ["mustard oil", "sorser tel", "oil"]}];
+let products=JSON.parse(localStorage.getItem(STORE)) || [
+{
+name:"Egg",
+aliases:["egg","dim"],
+baseQty:30,
+unit:"piece",
+price:210
+},
+{
+name:"Maida",
+aliases:["maida","moyda","noida"],
+baseQty:1,
+unit:"kg",
+price:34
+},
+{
+name:"Sugar",
+aliases:["sugar","chini"],
+baseQty:1,
+unit:"kg",
+price:48
+},
+{
+name:"Maggi",
+aliases:["maggi","maggie"],
+baseQty:1,
+unit:"pack",
+price:7
+}
+];
+
 let bill=JSON.parse(localStorage.getItem(BILL)) || [];
+
 let selectedItem=null;
 
 function saveStore(){
@@ -144,6 +309,7 @@ localStorage.setItem(BILL,JSON.stringify(bill));
 }
 
 function openTab(id,btn){
+
 document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
 document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
 
@@ -152,36 +318,56 @@ document.getElementById(btn).classList.add('active');
 }
 
 function renderInventory(){
+
 inventoryList.innerHTML='';
 
 products.forEach((p,i)=>{
+
 inventoryList.innerHTML+=`
 <div class="product">
+
 <div>
 <b>${p.name}</b><br>
-₹${p.price} per ${p.unit}
+${p.baseQty} ${p.unit} = ₹${p.price}
 </div>
 
 <div>
 <button onclick="editProduct(${i})">Edit</button>
 <button onclick="deleteProduct(${i})">Delete</button>
 </div>
+
 </div>
 `;
 });
 }
 
 function saveProduct(){
+
 const name=pname.value.trim();
+
 const aliases=palias.value.split(',').map(x=>x.trim()).filter(Boolean);
+
 const unit=punit.value;
+
+const baseQty=parseFloat(pbaseqty.value || 1);
+
 const price=parseFloat(pprice.value);
 
+if(!name || !price){
+alert("Invalid product");
+return;
+}
+
 products.push({
-name,aliases,unit,price
+name,
+aliases,
+unit,
+baseQty,
+price
 });
 
 saveStore();
+
 renderInventory();
 
 pname.value='';
@@ -190,80 +376,43 @@ pprice.value='';
 }
 
 function editProduct(i){
+
 const p=products[i];
 
 pname.value=p.name;
 palias.value=p.aliases.join(', ');
 punit.value=p.unit;
+pbaseqty.value=p.baseQty;
 pprice.value=p.price;
 
 products.splice(i,1);
 
 saveStore();
+
 renderInventory();
 }
 
 function deleteProduct(i){
+
 products.splice(i,1);
+
 saveStore();
+
 renderInventory();
 }
 
 function normalize(t){
+
 return t.toLowerCase()
 .replaceAll('noida','maida')
 .replaceAll('maggie','maggi')
-.replaceAll('dim','egg');
-}
+.replaceAll('dim','egg')
+.replaceAll('chini','sugar');
 
-function startVoice(){
-
-const SR=window.SpeechRecognition || window.webkitSpeechRecognition;
-
-const rec=new SR();
-
-rec.lang='en-IN';
-
-rec.start();
-
-heard.innerHTML='Listening...';
-
-rec.onresult=function(e){
-
-let t=normalize(e.results[0][0].transcript);
-
-heard.innerHTML=t;
-
-qty.value=parseQty(t);
-unit.value=parseUnit(t);
-
-search.value=t;
-
-searchItems();
-};
-}
-
-function parseQty(t){
-let q=1;
-const m=t.match(/(\d+(\.\d+)?)/);
-if(m) q=parseFloat(m[1]);
-if(t.includes('half')) q=.5;
-return q;
-}
-
-function parseUnit(t){
-if(t.includes('kg')) return 'kg';
-if(t.includes('gm')) return 'gm';
-if(t.includes('piece') || t.includes('ta')) return 'piece';
-if(t.includes('pack')) return 'pack';
-if(t.includes('tray')) return 'tray';
-if(t.includes('dozen')) return 'dozen';
-if(t.includes('ml')) return 'ml';
-if(t.includes('litre')) return 'litre';
-return 'piece';
 }
 
 function similarity(a,b){
+
 a=a.toLowerCase();
 b=b.toLowerCase();
 
@@ -295,6 +444,7 @@ s=Math.max(s,similarity(q,a));
 if(s>.2){
 ranked.push({p,score:s});
 }
+
 });
 
 ranked.sort((a,b)=>b.score-a.score);
@@ -306,27 +456,85 @@ suggestions.innerHTML+=`
 ${r.p.name}
 </div>
 `;
+
 });
 
 if(ranked.length>0){
 selectItem(ranked[0].p.name);
 }
+
 }
 
 function selectItem(name){
+
 selectedItem=products.find(x=>x.name===name);
+
 search.value=name;
+
+}
+
+function parseQty(t){
+
+let q=1;
+
+const m=t.match(/(\d+(\.\d+)?)/);
+
+if(m) q=parseFloat(m[1]);
+
+if(t.includes('half')) q=.5;
+
+return q;
+
+}
+
+function parseUnit(t){
+
+if(t.includes('kg')) return 'kg';
+if(t.includes('gm')) return 'gm';
+if(t.includes('piece') || t.includes('ta')) return 'piece';
+if(t.includes('tray')) return 'tray';
+if(t.includes('dozen')) return 'dozen';
+if(t.includes('pack')) return 'pack';
+if(t.includes('ml')) return 'ml';
+if(t.includes('litre')) return 'litre';
+
+return 'piece';
+
+}
+
+function startVoice(){
+
+const SR=window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const rec=new SR();
+
+rec.lang='en-IN';
+
+rec.start();
+
+heard.innerHTML='Listening...';
+
+rec.onresult=function(e){
+
+let t=normalize(e.results[0][0].transcript);
+
+heard.innerHTML=t;
+
+qty.value=parseQty(t);
+
+unit.value=parseUnit(t);
+
+search.value=t;
+
+searchItems();
+
+};
+
 }
 
 function convert(q,from,to){
 
 if(from===to) return q;
-
-if(from==='piece' && to==='tray') return q/30;
-if(from==='tray' && to==='piece') return q*30;
-
-if(from==='piece' && to==='dozen') return q/12;
-if(from==='dozen' && to==='piece') return q*12;
 
 if(from==='gm' && to==='kg') return q/1000;
 if(from==='kg' && to==='gm') return q*1000;
@@ -334,63 +542,108 @@ if(from==='kg' && to==='gm') return q*1000;
 if(from==='ml' && to==='litre') return q/1000;
 if(from==='litre' && to==='ml') return q*1000;
 
+if(from==='piece' && to==='dozen') return q/12;
+if(from==='dozen' && to==='piece') return q*12;
+
 return null;
+
 }
 
 function calculateQty(){
 
-if(!selectedItem) return;
+if(!selectedItem){
+alert('Select item');
+return;
+}
 
-const q=parseFloat(qty.value || 1);
-const u=unit.value;
+let q=parseFloat(qty.value || 1);
 
-let cq=convert(q,u,selectedItem.unit);
+let u=unit.value;
 
-if(cq===null){
+let converted=q;
+
+if(u!==selectedItem.unit){
+
+converted=convert(q,u,selectedItem.unit);
+
+if(converted===null){
+
+if(selectedItem.name.toLowerCase()==='egg'){
+
+if(u==='piece'){
+converted=q;
+}
+
+else if(u==='tray'){
+converted=q*30;
+}
+
+}
+
+else{
 result.innerHTML='<h3>Invalid conversion</h3>';
 return;
 }
 
-const total=(cq*selectedItem.price).toFixed(2);
+}
+
+}
+
+const total=((converted/selectedItem.baseQty)*selectedItem.price).toFixed(2);
 
 result.innerHTML=`
 <h2>${selectedItem.name}</h2>
+
 <div class="big">₹${total}</div>
+
 <button class="btn" onclick="addBill('${selectedItem.name}',${q},'${u}',${total},'qty')">
 Add To Bill
 </button>
 `;
+
 }
 
 function calculateAmount(){
 
-if(!selectedItem) return;
+if(!selectedItem){
+alert('Select item');
+return;
+}
 
-const amount=parseFloat(amountInput.value || 0);
+let amount=parseFloat(amountInput.value || 0);
 
 if(amount<=0) return;
 
-const qtyCalc=(amount/selectedItem.price).toFixed(2);
+let qtyCalc=((amount/selectedItem.price)*selectedItem.baseQty).toFixed(2);
 
 result.innerHTML=`
 <h2>${selectedItem.name}</h2>
+
 <div class="big">${qtyCalc} ${selectedItem.unit}</div>
+
 <div>for ₹${amount}</div>
+
 <button class="btn" onclick="addBill('${selectedItem.name}',${qtyCalc},'${selectedItem.unit}',${amount},'amount')">
 Add To Bill
 </button>
 `;
+
 }
 
 function addBill(item,qty,unit,total,type){
 
 bill.push({
-item,qty,unit,total:parseFloat(total),type
+item,
+qty,
+unit,
+total:parseFloat(total),
+type
 });
 
 saveBill();
 
 renderBill();
+
 }
 
 function renderBill(){
@@ -407,6 +660,7 @@ g+=b.total;
 
 billList.innerHTML+=`
 <div class="bill-item">
+
 <div>
 <b>${b.item}</b><br>
 ${b.type==='qty' ? b.qty+' '+b.unit : 'By Amount'}
@@ -416,28 +670,45 @@ ${b.type==='qty' ? b.qty+' '+b.unit : 'By Amount'}
 ₹${b.total.toFixed(2)}<br>
 <button class="no-print" onclick="removeBill(${i})">Delete</button>
 </div>
+
 </div>
 `;
+
 });
 
 grand.innerHTML='₹'+g.toFixed(2);
+
 }
 
 function removeBill(i){
+
 bill.splice(i,1);
+
 saveBill();
+
 renderBill();
+
 }
 
 function clearBill(){
+
 bill=[];
+
 saveBill();
+
 renderBill();
+
 }
 
 renderInventory();
+
 renderBill();
 
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('service-worker.js');
+}
+
 </script>
+
 </body>
 </html>

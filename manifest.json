@@ -1,1 +1,9 @@
-{"name":"Dukaan Pro"}
+
+{
+"name":"Maa Manosha Bhandar",
+"short_name":"MMB",
+"start_url":"./index.html",
+"display":"standalone",
+"background_color":"#f8f4ec",
+"theme_color":"#0b4d2c"
+}
