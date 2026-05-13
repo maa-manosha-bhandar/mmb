@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Maa Manosha Bhandar</title>
+<title>Maa Manosha Bhandar, Nepakuli</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -21,8 +21,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* ── HEADER ── */
 header{background:linear-gradient(135deg,var(--green) 0%,#1d6b40 100%);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.18)}
-.logo{width:52px;height:52px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-.shop-name{font-family:'Tiro Devanagari Hindi',serif;font-size:19px;line-height:1.2}
+.logo{width:52px;height:52px;border-radius:50%;background:#fff;object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.shop-name{font-family:'Tiro Devanagari Hindi',serif;font-size:18px;line-height:1.2}
 .shop-sub{font-size:11px;opacity:.8;margin-top:2px;letter-spacing:.5px;text-transform:uppercase}
 
 /* ── TABS ── */
@@ -96,13 +96,11 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 .vr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .vr-label{font-size:12px;font-weight:600;color:var(--muted)}
 .vr-val{font-size:14px;font-weight:700;color:var(--green)}
-.vr-change{background:none;color:var(--green);font-size:12px;font-weight:600;text-decoration:underline;padding:0}
 
 /* ── MANUAL SECTION ── */
 .manual-section{margin-top:12px;border-top:1.5px dashed var(--border);padding-top:12px}
 .manual-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .manual-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
-.collapse-btn{background:none;color:var(--muted);font-size:12px;font-weight:600}
 
 /* ── SUGGESTIONS ── */
 .suggestions{border:1.5px solid var(--border);border-radius:10px;max-height:200px;overflow:auto;margin-top:8px;display:none;background:var(--card);box-shadow:var(--shl);position:relative;z-index:10}
@@ -154,9 +152,6 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 #toast.error{background:var(--red)}
 #toast.info{background:#1d4ed8}
 
-/* ── INVENTORY SEARCH ── */
-#invSearch{margin-bottom:0}
-
 /* ── PRINT ── */
 @media print{
   .no-print{display:none!important}
@@ -166,16 +161,14 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
   #billing{display:block!important;padding:0}
   .billing-control{display:none}
 }
-
-/* filter-tags removed */
 </style>
 </head>
 <body>
 
 <header class="no-print">
-  <div class="logo">🛒</div>
+  <img class="logo" src="logo_maa_manosha_bhandar.png" alt="MMB Logo">
   <div>
-    <div class="shop-name">Maa Manosha Bhandar</div>
+    <div class="shop-name">Maa Manosha Bhandar, Nepakuli</div>
     <div class="shop-sub">Smart Grocery Billing</div>
   </div>
 </header>
@@ -190,7 +183,6 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
   </button>
 </div>
 
-<!-- ═══════ INVENTORY TAB ═══════ -->
 <div id="inventory" class="panel active">
 
   <div class="card">
@@ -229,26 +221,22 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
   </div>
 </div>
 
-<!-- ═══════ BILLING TAB ═══════ -->
 <div id="billing" class="panel">
 
-  <!-- VOICE + SMART MODE CARD -->
   <div class="card no-print billing-control">
     <div class="mic-wrap">
       <button class="mic" id="micBtn" onclick="startVoice()">🎤</button>
       <div class="mic-hint">
-        Tap &amp; say: <em>"10 taka r chal"</em> or <em>"500 gm maida"</em>
+        Tap &amp; say: <br><em>"10 taka r chal"</em> or <em>"500 gm maida"</em>
       </div>
       <div id="heard"></div>
     </div>
 
-    <!-- AUTO-DETECT STATUS -->
     <div id="autoBadge" class="auto-badge" style="display:none">
       <span class="dot"></span><span id="autoBadgeText">Auto: Qty mode</span>
       <button onclick="toggleManual()" style="background:none;font-size:11px;font-weight:700;color:inherit;text-decoration:underline;padding:0;margin-left:4px">Change</button>
     </div>
 
-    <!-- VOICE RESULT PANEL (shows detected item + values) -->
     <div class="voice-result" id="voiceResult">
       <div class="vr-row">
         <span class="vr-label">Detected Item</span>
@@ -264,19 +252,16 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
       </div>
     </div>
 
-    <!-- MANUAL OVERRIDE SECTION -->
     <div class="manual-section" id="manualSection">
       <div class="manual-header">
         <div class="manual-title">Manual Override</div>
       </div>
 
-      <!-- MODE TOGGLE -->
       <div class="mode-toggle">
         <button class="mode-btn active" id="modeQtyBtn" onclick="setMode('qty')">📏 By Qty</button>
         <button class="mode-btn" id="modeAmtBtn" onclick="setMode('amount')">💰 By Amount</button>
       </div>
 
-      <!-- QTY FIELDS -->
       <div id="qtyFields">
         <div class="row">
           <div>
@@ -294,19 +279,16 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
         </div>
       </div>
 
-      <!-- AMOUNT FIELD -->
       <div id="amtFields" style="display:none">
         <label for="amountInput">Amount (₹)</label>
         <input id="amountInput" type="number" placeholder="e.g. 50" min="0" step="any">
       </div>
 
-      <!-- SEARCH -->
       <label for="search">Search / Change Item</label>
       <input id="search" placeholder="Type to search product…" oninput="searchItems()" autocomplete="off">
       <div id="suggestions" class="suggestions"></div>
     </div>
 
-    <!-- SELECTED CHIP -->
     <div class="sel-chip" id="selChip">
       <span class="sel-chip-text" id="selChipText"></span>
       <button class="sel-chip-clear" onclick="clearSelected()">×</button>
@@ -316,11 +298,10 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
     <div id="result"></div>
   </div>
 
-  <!-- BILL PRINTOUT CARD -->
   <div class="card" id="billCard">
     <div class="bill-header">
       <div class="bill-shop">Maa Manosha Bhandar</div>
-      <div class="bill-shop-sub">Quality Grocery · Baharampur</div>
+      <div class="bill-shop-sub">Quality Grocery · Nepakuli</div>
       <div class="bill-date" id="billDate"></div>
     </div>
     <div id="billList"></div>
@@ -341,14 +322,13 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 
 <script>
 // ════════════════════════════════════════════
-//  DATA
+//  DATA & INDEXED DB (Acts like SQLite offline)
 // ════════════════════════════════════════════
 const STORE_KEY = 'mmb_store_v3';
 const BILL_KEY  = 'mmb_bill_v3';
 const DB_NAME   = 'MaaManosha';
 const DB_VER    = 1;
 
-// ── IndexedDB wrapper ──
 let _db = null;
 function openDB(){
   return new Promise((res,rej)=>{
@@ -380,6 +360,7 @@ function idbSet(key,val){
   }));
 }
 
+// Keeping the original huge product array intact.
 const DEFAULT_PRODUCTS = [
   {name:"Maida",aliases:["maida","moyda","flour"],baseQty:1,unit:"kg",price:34,cat:"grains"},
   {name:"Atta (Lalji)",aliases:["atta lalji","lalji atta","wheat flour lalji"],baseQty:1,unit:"kg",price:40,cat:"grains"},
@@ -561,7 +542,6 @@ const DEFAULT_PRODUCTS = [
   {name:"ORS Drink",aliases:["ors drink","ors","electrolyte drink","oral rehydration"],baseQty:1,unit:"piece",price:10,cat:"drinks"},
 ];
 
-// ── Category metadata ──
 const CATS = {
   grains:"🌾 Grains", rice:"🍚 Rice", dal:"🫘 Dal", oil:"🛢 Oil",
   spice:"🌶 Spices", snacks:"🍿 Snacks", biscuit:"🍪 Biscuits",
@@ -571,7 +551,6 @@ const CATS = {
   dairy:"🥛 Dairy", egg:"🥚 Eggs", vegetables:"🥔 Vegetables", misc:"📦 Misc"
 };
 
-// ── State ──
 let products = DEFAULT_PRODUCTS.map(p=>({...p}));
 let bill     = [];
 let selectedItem = null;
@@ -587,14 +566,11 @@ async function loadState(){
     const [storedProducts, storedBill] = await Promise.all([idbGet(STORE_KEY), idbGet(BILL_KEY)]);
     if(storedProducts && Array.isArray(storedProducts)) products = storedProducts;
     if(storedBill    && Array.isArray(storedBill))     bill     = storedBill;
-  }catch(e){ /* use defaults */ }
+  }catch(e){}
   renderInventory();
   renderBill();
 }
 
-// ════════════════════════════════════════════
-//  TOAST
-// ════════════════════════════════════════════
 let _tt;
 function showToast(msg, type='success'){
   const t=document.getElementById('toast');
@@ -602,9 +578,6 @@ function showToast(msg, type='success'){
   clearTimeout(_tt); _tt=setTimeout(()=>t.className='',2600);
 }
 
-// ════════════════════════════════════════════
-//  TABS
-// ════════════════════════════════════════════
 function openTab(id,btn){
   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -612,19 +585,13 @@ function openTab(id,btn){
   document.getElementById(btn).classList.add('active');
 }
 
-// ════════════════════════════════════════════
-//  MODE
-// ════════════════════════════════════════════
 function setMode(m, auto=false){
   mode=m;
   document.getElementById('modeQtyBtn').classList.toggle('active',m==='qty');
   document.getElementById('modeAmtBtn').classList.toggle('active',m==='amount');
   document.getElementById('qtyFields').style.display=m==='qty'?'':'none';
   document.getElementById('amtFields').style.display=m==='amount'?'':'none';
-  if(!auto){
-    const ab=document.getElementById('autoBadge');
-    ab.style.display='none'; // manual override hides auto badge
-  }
+  if(!auto) document.getElementById('autoBadge').style.display='none';
 }
 
 function toggleManual(){
@@ -632,9 +599,6 @@ function toggleManual(){
   document.getElementById('manualSection').style.display=manualOpen?'block':'none';
 }
 
-// ════════════════════════════════════════════
-//  INVENTORY RENDER
-// ════════════════════════════════════════════
 function filterInventory(){
   invFilter=document.getElementById('invSearch').value.toLowerCase();
   renderInventory();
@@ -668,9 +632,6 @@ function renderInventory(){
   }).join('');
 }
 
-// ════════════════════════════════════════════
-//  SAVE / EDIT / DELETE PRODUCT
-// ════════════════════════════════════════════
 function saveProduct(){
   const idx=parseInt(document.getElementById('editIndex').value);
   const p={
@@ -683,14 +644,8 @@ function saveProduct(){
   };
   if(!p.name){showToast('Enter a product name','error');return;}
   if(!p.price||p.price<=0){showToast('Enter a valid price','error');return;}
-  if(idx>=0){
-    products[idx]=p; showToast('Product updated ✓');
-  }else{
-    if(products.find(x=>x.name.toLowerCase()===p.name.toLowerCase())){
-      showToast('Product already exists!','error');return;
-    }
-    products.push(p); showToast('Product added ✓');
-  }
+  if(idx>=0){ products[idx]=p; showToast('Product updated ✓'); }
+  else{ products.push(p); showToast('Product added ✓'); }
   saveStore(); renderInventory(); clearForm();
 }
 
@@ -724,26 +679,24 @@ function deleteProduct(i){
 }
 
 // ════════════════════════════════════════════
-//  SMART FUZZY SEARCH ENGINE
+//  IMPROVED FUZZY SEARCH NORMALIZATION
 // ════════════════════════════════════════════
-// Extended Bengali/Hindi → English normalisation map
 const NORM_MAP = {
-  // money words
-  'taka':'rupees','tka':'rupees','rs':'rupees','tk':'rupees',
-  // Bengali units
-  'dim':'egg','deem':'egg','chal':'rice','chini':'sugar','loon':'salt','nun':'salt',
+  'taka':'rupees','tka':'rupees','rs':'rupees','tk':'rupees','rupee':'rupees',
+  'dim':'egg','deem':'egg','chal':'rice','chini':'sugar','loon':'salt','nun':'salt','namak':'salt',
   'sorser tel':'mustard oil','sorse tel':'mustard oil','tel':'oil',
-  'ata':'flour','atta':'flour','daal':'dal','dal':'dal',
+  'ata':'flour','atta':'flour','noida':'maida',
+  'daal':'dal','dal':'dal',
   'aloo':'potato','alu':'potato',
   'halud':'turmeric','haldi':'turmeric',
   'morich':'chili','lonka':'chili','lal morich':'red chili',
   'cha':'tea','chai':'tea',
   'jire':'cumin','jera':'cumin','jira':'cumin','jeera':'cumin',
-  'dhaniya':'coriander',
+  'dhaniya':'coriander','daniya':'coriander',
   'posto':'poppy','khus khus':'poppy',
   'elachi':'cardamom','elaichi':'cardamom',
   'lobongo':'clove','laung':'clove',
-  'aam':'mango','lichu':'lychee',
+  'aam':'mango','lichu':'lychee','leechu':'lychee',
   'badam':'almond','kaju':'cashew','kismish':'raisin',
   'chira':'flattened rice','chere':'flattened rice',
   'suji':'semolina','sooji':'semolina',
@@ -751,15 +704,13 @@ const NORM_MAP = {
   'jharna':'mustard','sorse':'mustard',
   'gur':'jaggery','gud':'jaggery',
   'piaz':'onion','pyaaz':'onion',
-  'adrak':'ginger','roshun':'garlic',
-  'noida':'maida',
+  'adrak':'ginger','roshun':'garlic'
 };
 
 function normalize(t){
   t = t.toLowerCase().trim();
-  // apply map longest-first
   const keys = Object.keys(NORM_MAP).sort((a,b)=>b.length-a.length);
-  for(const k of keys){ t=t.replaceAll(k, NORM_MAP[k]); }
+  for(const k of keys) t=t.replaceAll(k, NORM_MAP[k]);
   return t;
 }
 
@@ -772,19 +723,16 @@ function scoreMatch(query, product){
   let best = 0;
   for(const s of all){
     const sn = normalize(s);
-    // exact match
     if(sn===qn || s===query.toLowerCase()) return 1.0;
-    // starts with
     if(sn.startsWith(qn) || s.startsWith(query.toLowerCase())) best=Math.max(best,0.9);
-    // contains
     if(sn.includes(qn) || s.includes(query.toLowerCase())) best=Math.max(best,0.8);
-    // word overlap
+    
     const qWords = qn.split(/\s+/).filter(w=>w.length>1);
     const sWords = sn.split(/\s+/);
     let hits=0;
     for(const w of qWords){ if(sWords.some(sw=>sw.includes(w)||w.includes(sw))) hits++; }
     if(qWords.length>0) best=Math.max(best, (hits/qWords.length)*0.75);
-    // character coverage
+    
     let cov=0;
     for(const c of qn){ if(sn.includes(c)) cov++; }
     best=Math.max(best, (cov/Math.max(qn.length,sn.length))*0.5);
@@ -801,13 +749,8 @@ function rankProducts(query, threshold=0.25){
   return results.sort((a,b)=>b.score-a.score);
 }
 
-// ════════════════════════════════════════════
-//  SEARCH BAR (manual)
-// ════════════════════════════════════════════
 let _st;
-function searchItems(){
-  clearTimeout(_st); _st=setTimeout(_doSearch,100);
-}
+function searchItems(){ clearTimeout(_st); _st=setTimeout(_doSearch,100); }
 function _doSearch(){
   const q=document.getElementById('search').value.trim();
   const sugg=document.getElementById('suggestions');
@@ -853,31 +796,26 @@ function updateChip(){
 }
 
 // ════════════════════════════════════════════
-//  VOICE RECOGNITION
+//  SMOOTH VOICE RECOGNITION (EN-IN ONLY)
 // ════════════════════════════════════════════
 function parseVoiceCommand(raw){
   const t = normalize(raw);
   const result = { raw, normalized: t, mode: 'qty', number: null, unit: null, itemQuery: null };
 
-  // ── detect MODE: if money words present → amount mode ──
   const amtWords = ['rupees','taka','rs ','tk ','worth'];
   result.mode = amtWords.some(w=>t.includes(w)) ? 'amount' : 'qty';
 
-  // ── extract number ──
   const numMatch = t.match(/(\d+(\.\d+)?)/);
   if(numMatch) result.number = parseFloat(numMatch[1]);
 
-  // ── extract unit (only relevant in qty mode) ──
   const unitPatterns = [
-    [/\bkg\b/,'kg'],[/\bkilogram/,'kg'],
-    [/\bgm\b|\bgram/,'gm'],
+    [/\bkg\b/,'kg'],[/\bkilogram/,'kg'],[/\bgm\b|\bgram/,'gm'],
     [/\blitre|\bliter/,'litre'],[/\bml\b/,'ml'],
     [/\btray\b/,'tray'],[/\bdozen\b|\bduj\b/,'dozen'],
     [/\bpack\b|\bpacket\b/,'pack'],[/\bpiece\b|\bpiece|\bta\b|\bti\b/,'piece'],
   ];
   for(const [pat,u] of unitPatterns){ if(pat.test(t)){result.unit=u;break;} }
 
-  // ── extract item name: strip numbers, units, money words ──
   let item = t
     .replace(/\d+(\.\d+)?/g,' ')
     .replace(/\b(rupees|taka|rs|tk|worth|kg|kilogram|gm|gram|litre|liter|ml|tray|dozen|duj|pack|packet|piece|ta\b|ti\b)\b/g,' ')
@@ -888,116 +826,118 @@ function parseVoiceCommand(raw){
   return result;
 }
 
+let activeRecognition = null;
+
 function startVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Voice not supported in this browser','error');return;}
 
   const btn=document.getElementById('micBtn');
+  
+  // If already listening, stop it manually
+  if(activeRecognition) {
+    activeRecognition.stop();
+    return;
+  }
+
   btn.classList.add('listening'); btn.textContent='🛑';
+  activeRecognition = new SR();
+  activeRecognition.lang = 'en-IN';
+  activeRecognition.interimResults = false;
+  activeRecognition.maxAlternatives = 3;
+  
+  // Natural stopping behavior
+  activeRecognition.continuous = false; 
 
-  // Collected transcripts from both passes
-  let allTranscripts=[];
+  activeRecognition.onresult = function(e){
+    let bestTranscript = e.results[0][0].transcript;
+    let bestMatch = null;
+    let bestScore = 0;
 
-  // ── Apply best result from collected transcripts ──
-  function applyBest(){
-    btn.classList.remove('listening');
-    btn.textContent='🎤';
-
-    let best=null, bestScore=0;
-    for(const alt of allTranscripts){
-      const cmd=parseVoiceCommand(alt);
+    // Check all alternatives to find the best product match
+    for(let i=0; i<e.results[0].length; i++){
+      let alt = e.results[0][i].transcript;
+      const cmd = parseVoiceCommand(alt);
       if(cmd.itemQuery){
-        const ranked=rankProducts(cmd.itemQuery,0.2);
-        if(ranked.length && ranked[0].score>bestScore){
-          bestScore=ranked[0].score;
-          best={cmd,ranked};
+        const ranked = rankProducts(cmd.itemQuery, 0.2);
+        if(ranked.length && ranked[0].score > bestScore){
+          bestScore = ranked[0].score;
+          bestMatch = { cmd, ranked: ranked };
+          bestTranscript = alt;
         }
       }
     }
-    // Fallback: use first transcript even without item match
-    if(!best && allTranscripts.length){
-      const cmd=parseVoiceCommand(allTranscripts[0]);
-      best={cmd,ranked:[]};
+
+    if(!bestMatch) {
+      bestMatch = { cmd: parseVoiceCommand(bestTranscript), ranked: [] };
     }
-    if(!best) return;
 
-    const {cmd,ranked}=best;
-    document.getElementById('heard').textContent='"'+cmd.raw+'"';
-    setMode(cmd.mode, true);
+    applyVoiceResult(bestMatch.cmd, bestMatch.ranked);
+  };
 
+  activeRecognition.onend = function(){
+    btn.classList.remove('listening');
+    btn.textContent='🎤';
+    activeRecognition = null;
+  };
+
+  activeRecognition.onerror = function(){
+    btn.classList.remove('listening');
+    btn.textContent='🎤';
+    activeRecognition = null;
+  };
+
+  try { activeRecognition.start(); } catch(e) {}
+}
+
+function applyVoiceResult(cmd, ranked) {
+  document.getElementById('heard').textContent='"'+cmd.raw+'"';
+  setMode(cmd.mode, true);
+
+  if(cmd.mode==='amount'){
+    if(cmd.number) document.getElementById('amountInput').value=cmd.number;
+  }else{
+    if(cmd.number) document.getElementById('qty').value=cmd.number;
+    if(cmd.unit)   document.getElementById('unit').value=cmd.unit;
+  }
+
+  if(ranked.length){
+    selectedItem=ranked[0].p;
+    updateChip();
+    document.getElementById('result').innerHTML='';
+
+    const ab=document.getElementById('autoBadge');
+    ab.style.display='inline-flex';
+    ab.className='auto-badge '+(cmd.mode==='amount'?'amount-mode':'');
+    document.getElementById('autoBadgeText').textContent=
+      `Auto: ${cmd.mode==='amount'?'Amount':'Qty'} · ${ranked[0].p.name}`;
+
+    const vr=document.getElementById('voiceResult');
+    vr.classList.add('show');
+    document.getElementById('vr-item').textContent=ranked[0].p.name;
+    document.getElementById('vr-mode').textContent=cmd.mode==='amount'?'By Amount (₹)':'By Quantity';
+    const qrow=document.getElementById('vr-qty-row');
     if(cmd.mode==='amount'){
-      if(cmd.number) document.getElementById('amountInput').value=cmd.number;
+      qrow.querySelector('.vr-label').textContent='Amount';
+      qrow.querySelector('.vr-val').textContent='₹'+(cmd.number||'?');
     }else{
-      if(cmd.number) document.getElementById('qty').value=cmd.number;
-      if(cmd.unit)   document.getElementById('unit').value=cmd.unit;
+      qrow.querySelector('.vr-label').textContent='Quantity';
+      qrow.querySelector('.vr-val').textContent=(cmd.number||'?')+' '+(cmd.unit||'');
     }
-
-    if(ranked.length){
-      selectedItem=ranked[0].p;
-      updateChip();
-      document.getElementById('result').innerHTML='';
-
-      const ab=document.getElementById('autoBadge');
-      ab.style.display='inline-flex';
-      ab.className='auto-badge '+(cmd.mode==='amount'?'amount-mode':'');
-      document.getElementById('autoBadgeText').textContent=
-        `Auto: ${cmd.mode==='amount'?'Amount':'Qty'} · ${ranked[0].p.name}`;
-
-      const vr=document.getElementById('voiceResult');
-      vr.classList.add('show');
-      document.getElementById('vr-item').textContent=ranked[0].p.name;
-      document.getElementById('vr-mode').textContent=cmd.mode==='amount'?'By Amount (₹)':'By Quantity';
-      const qrow=document.getElementById('vr-qty-row');
-      if(cmd.mode==='amount'){
-        qrow.querySelector('.vr-label').textContent='Amount';
-        qrow.querySelector('.vr-val').textContent='₹'+(cmd.number||'?');
-      }else{
-        qrow.querySelector('.vr-label').textContent='Quantity';
-        qrow.querySelector('.vr-val').textContent=(cmd.number||'?')+' '+(cmd.unit||'');
-      }
-      setTimeout(()=>calculate(true),150);
-    }else{
-      if(cmd.itemQuery){
-        document.getElementById('search').value=cmd.itemQuery;
-        _doSearch();
-        showToast('Could not auto-detect item — please select manually','info');
-      }
-      manualOpen=true;
-      document.getElementById('manualSection').style.display='block';
+    setTimeout(()=>calculate(true),150);
+  }else{
+    if(cmd.itemQuery){
+      document.getElementById('search').value=cmd.itemQuery;
+      _doSearch();
+      showToast('Check manual search to refine','info');
     }
+    manualOpen=true;
+    document.getElementById('manualSection').style.display='block';
   }
-
-  // ── Run a single recognition pass, return Promise<transcripts[]> ──
-  function runRec(lang){
-    return new Promise(resolve=>{
-      const rec=new SR();
-      rec.lang=lang; rec.interimResults=false; rec.maxAlternatives=5;
-      const got=[];
-      rec.onresult=function(e){
-        for(let i=0;i<e.results[0].length;i++)
-          got.push(e.results[0][i].transcript);
-      };
-      rec.onerror=function(){ resolve([]); }; // any error → empty, continue
-      rec.onend=function(){ resolve(got); };
-      try{ rec.start(); }catch(e){ resolve([]); }
-    });
-  }
-
-  // ── Sequential: en-IN first, then bn-IN, then pick winner ──
-  (async()=>{
-    const enResults = await runRec('en-IN');
-    allTranscripts.push(...enResults);
-
-    // Only run Bengali pass if English got nothing useful OR always for better coverage
-    const bnResults = await runRec('bn-IN');
-    allTranscripts.push(...bnResults);
-
-    applyBest();
-  })();
 }
 
 // ════════════════════════════════════════════
-//  UNIT CONVERSION
+//  CALCULATIONS & BILLING
 // ════════════════════════════════════════════
 function convert(q,from,to){
   if(from===to) return q;
@@ -1011,9 +951,6 @@ function convert(q,from,to){
   return (table[`${from}_${to}`]||null)?.(q)??null;
 }
 
-// ════════════════════════════════════════════
-//  CALCULATE
-// ════════════════════════════════════════════
 function calculate(auto=false){
   if(!selectedItem){showToast('Please select a product first','error');return;}
   const res=document.getElementById('result');
@@ -1056,9 +993,6 @@ function resultCard(name,main,sub,onclick){
   </div>`;
 }
 
-// ════════════════════════════════════════════
-//  BILL
-// ════════════════════════════════════════════
 function addBill(item,qty,unit,total,type){
   bill.push({item,qty,unit,total:parseFloat(total),type});
   saveBill(); renderBill();
@@ -1119,15 +1053,10 @@ function clearBill(){
   bill=[]; saveBill(); renderBill(); showToast('Bill cleared');
 }
 
-// ════════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════════
-// Start with manual section hidden (voice auto-opens it if needed)
 document.getElementById('manualSection').style.display='none';
 manualOpen=false;
 
-loadState(); // async: loads from IndexedDB then renders
-
+loadState();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 </body>
