@@ -1,7 +1,7 @@
 {
   "name": "Maa Manosha Bhandar",
   "short_name": "MMB",
-  "description": "Smart grocery billing for Maa Manosha Bhandar",
+  "description": "Smart grocery billing for Maa Manosha Bhandar, Baharampur",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
