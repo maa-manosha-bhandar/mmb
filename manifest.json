@@ -1,1 +1,24 @@
-{"name":"Maa Manosha Bhandar","short_name":"MMB","display":"standalone"}
+{
+  "name": "Maa Manosha Bhandar",
+  "short_name": "MMB",
+  "description": "Smart grocery billing for Maa Manosha Bhandar",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0b4d2c",
+  "background_color": "#f7f4ed",
+  "icons": [
+    {
+      "src": "https://dummyimage.com/192x192/0b4d2c/ffffff&text=MMB",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://dummyimage.com/512x512/0b4d2c/ffffff&text=MMB",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

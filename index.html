@@ -1,415 +1,895 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Maa Manosha Bhandar</title>
 <link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body{font-family:Arial;background:#f5f2e9;margin:0;max-width:760px;margin:auto}
-header{background:#0b4d2c;color:#fff;padding:14px;display:flex;align-items:center;gap:12px}
-.logo{width:72px;height:72px;border-radius:50%;background:#fff}
-.tabs{display:flex;background:#fff}
-.tab{flex:1;padding:14px;border:none;background:none;font-weight:bold}
-.tab.active{border-bottom:4px solid #0b4d2c;color:#0b4d2c}
-.panel{display:none;padding:14px}
+:root{
+  --green:#0b4d2c;
+  --green-light:#e8f5ee;
+  --green-mid:#1a7a46;
+  --gold:#c8962a;
+  --gold-light:#fdf6e3;
+  --red:#c0392b;
+  --bg:#f7f4ed;
+  --card:#ffffff;
+  --border:#e2ddd4;
+  --text:#1a1a1a;
+  --text-muted:#6b7280;
+  --radius:14px;
+  --shadow:0 2px 12px rgba(11,77,44,.10);
+  --shadow-lg:0 8px 30px rgba(11,77,44,.13);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  max-width:480px;
+  margin:0 auto;
+}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,var(--green) 0%,var(--green-mid) 100%);
+  color:#fff;
+  padding:18px 16px 16px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  box-shadow:0 2px 16px rgba(0,0,0,.18);
+}
+.logo{
+  width:56px;height:56px;border-radius:50%;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+  flex-shrink:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+.shop-name{
+  font-family:'Tiro Devanagari Hindi',serif;
+  font-size:20px;
+  font-weight:400;
+  line-height:1.2;
+  letter-spacing:.3px;
+}
+.shop-sub{
+  font-size:12px;
+  opacity:.82;
+  margin-top:2px;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  background:var(--card);
+  border-bottom:2px solid var(--border);
+  position:sticky;
+  top:88px;
+  z-index:99;
+}
+.tab{
+  flex:1;padding:14px 8px;
+  border:none;background:none;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:600;
+  color:var(--text-muted);cursor:pointer;
+  transition:all .2s;
+  position:relative;
+}
+.tab.active{
+  color:var(--green);
+}
+.tab.active::after{
+  content:'';
+  position:absolute;bottom:-2px;left:0;right:0;
+  height:3px;background:var(--green);
+  border-radius:2px 2px 0 0;
+}
+.tab-icon{font-size:18px;display:block;margin-bottom:2px}
+
+/* PANELS */
+.panel{display:none;padding:16px;padding-bottom:80px}
 .panel.active{display:block}
-.card{background:#fff;padding:16px;border-radius:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-input,select{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #ddd;box-sizing:border-box}
-button{border:none;cursor:pointer}
-.btn{background:#0b4d2c;color:#fff;padding:12px;border-radius:10px;width:100%;margin-top:10px}
+
+/* CARDS */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+}
+.card-title{
+  font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;
+  color:var(--text-muted);margin-bottom:14px;
+}
+
+/* FORM ELEMENTS */
+label{
+  display:block;
+  font-size:12px;font-weight:600;
+  color:var(--text-muted);
+  margin-bottom:5px;margin-top:12px;
+  letter-spacing:.3px;
+}
+input,select{
+  width:100%;padding:11px 14px;
+  border-radius:10px;
+  border:1.5px solid var(--border);
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;color:var(--text);
+  background:#fafaf8;
+  transition:border-color .2s,box-shadow .2s;
+  outline:none;
+}
+input:focus,select:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(11,77,44,.1);
+  background:#fff;
+}
+input::placeholder{color:#b0a898}
 .row{display:flex;gap:10px}
-.product,.bill-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #ddd}
-.big{font-size:34px;color:green;font-weight:bold}
-.mic{width:90px;height:90px;border-radius:50%;font-size:34px;background:#0b4d2c;color:white}
-.suggestions{border:1px solid #ddd;border-radius:10px;max-height:180px;overflow:auto;margin-top:8px}
-.s-item{padding:10px;border-bottom:1px solid #eee;cursor:pointer}
-.mode{padding:10px;border-radius:8px;background:#edf7ef;margin-top:10px}
+.row>*{flex:1}
+
+/* BUTTONS */
+button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn{
+  background:var(--green);color:#fff;
+  padding:13px 16px;
+  border-radius:10px;width:100%;
+  font-size:15px;font-weight:600;
+  margin-top:14px;
+  transition:background .2s,transform .1s;
+  letter-spacing:.2px;
+}
+.btn:hover{background:var(--green-mid)}
+.btn:active{transform:scale(.98)}
+.btn-outline{
+  background:transparent;
+  border:1.5px solid var(--green);
+  color:var(--green);
+  padding:10px 16px;
+  border-radius:10px;
+  font-size:14px;font-weight:600;
+  transition:all .2s;
+}
+.btn-outline:hover{background:var(--green-light)}
+.btn-danger{
+  background:#fff0ef;color:var(--red);
+  border:1.5px solid #fecaca;
+  padding:7px 12px;border-radius:8px;
+  font-size:13px;font-weight:600;
+}
+.btn-ghost{
+  background:none;color:var(--green);
+  padding:7px 12px;border-radius:8px;
+  font-size:13px;font-weight:600;
+}
+
+/* INVENTORY LIST */
+.product{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--border);
+  gap:10px;
+}
+.product:last-child{border-bottom:none}
+.product-name{font-weight:600;font-size:15px}
+.product-meta{font-size:13px;color:var(--text-muted);margin-top:2px}
+.product-price{
+  font-weight:700;color:var(--green);font-size:15px;
+  white-space:nowrap;
+}
+.product-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* EMPTY STATE */
+.empty{
+  text-align:center;padding:32px 16px;color:var(--text-muted);
+}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty p{font-size:14px}
+
+/* MIC BUTTON */
+.mic-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0}
+.mic{
+  width:80px;height:80px;border-radius:50%;
+  font-size:30px;
+  background:var(--green);color:white;
+  box-shadow:0 4px 18px rgba(11,77,44,.3);
+  transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.mic:hover{transform:scale(1.05);box-shadow:0 6px 22px rgba(11,77,44,.4)}
+.mic.listening{
+  background:var(--red);
+  animation:pulse 1s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}
+  70%{box-shadow:0 0 0 16px rgba(192,57,43,0)}
+  100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}
+}
+.mic-label{font-size:13px;color:var(--text-muted);font-weight:500}
+#heard{
+  font-size:14px;color:var(--green);font-style:italic;
+  min-height:20px;text-align:center;
+}
+
+/* MODE TOGGLE */
+.mode-toggle{
+  display:flex;background:var(--bg);border-radius:10px;padding:4px;gap:4px;
+  margin:12px 0;
+}
+.mode-btn{
+  flex:1;padding:9px;border-radius:8px;
+  font-size:13px;font-weight:600;color:var(--text-muted);
+  background:none;transition:all .2s;
+}
+.mode-btn.active{
+  background:var(--card);color:var(--green);
+  box-shadow:0 1px 4px rgba(0,0,0,.1);
+}
+
+/* SUGGESTIONS */
+.suggestions{
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  max-height:180px;overflow:auto;
+  margin-top:8px;
+  display:none;
+  background:var(--card);
+  box-shadow:var(--shadow-lg);
+}
+.suggestions.show{display:block}
+.s-item{
+  padding:11px 14px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:background .15s;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.s-item:last-child{border-bottom:none}
+.s-item:hover{background:var(--green-light)}
+.s-item.selected{background:var(--green-light);}
+.s-price{font-size:13px;color:var(--text-muted)}
+
+/* RESULT CARD */
+#result{margin-top:14px}
+.result-card{
+  background:var(--gold-light);
+  border:1.5px solid #e8c96a;
+  border-radius:var(--radius);
+  padding:18px;
+  text-align:center;
+  animation:slideUp .2s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-item-name{font-size:14px;font-weight:600;color:var(--text-muted)}
+.result-amount{font-size:42px;font-weight:700;color:var(--green);line-height:1.1}
+.result-sub{font-size:13px;color:var(--text-muted);margin:4px 0 14px}
+
+/* BILL */
+.bill-header{
+  text-align:center;padding-bottom:14px;
+  border-bottom:2px dashed var(--border);
+  margin-bottom:14px;
+}
+.bill-shop{font-family:'Tiro Devanagari Hindi',serif;font-size:22px}
+.bill-shop-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.bill-date{font-size:12px;color:var(--text-muted);margin-top:6px}
+.bill-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px dashed var(--border);
+  gap:8px;
+}
+.bill-item:last-child{border-bottom:none}
+.bill-item-name{font-weight:600;font-size:14px}
+.bill-item-qty{font-size:12px;color:var(--text-muted);margin-top:2px}
+.bill-item-price{font-weight:700;font-size:15px;color:var(--green);white-space:nowrap}
+.grand-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 0 4px;
+  border-top:2px solid var(--green);
+  margin-top:8px;
+}
+.grand-label{font-size:16px;font-weight:700}
+.grand-amount{font-size:32px;font-weight:700;color:var(--green)}
+.bill-empty{text-align:center;padding:24px;color:var(--text-muted);font-size:14px}
+
+/* BILL ACTIONS */
+.bill-actions{display:flex;gap:10px;margin-top:14px}
+.bill-actions .btn{margin-top:0;flex:1}
+.btn-clear{background:#fff0ef;color:var(--red);border:1.5px solid #fecaca}
+.btn-clear:hover{background:#fee2e2}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#1a1a1a;color:#fff;
+  padding:12px 22px;border-radius:50px;
+  font-size:14px;font-weight:500;
+  z-index:999;transition:transform .3s ease;
+  white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.25);
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.success{background:var(--green)}
+#toast.error{background:var(--red)}
+
+/* BADGE */
+.tab-badge{
+  display:inline-block;
+  background:var(--gold);color:#fff;
+  font-size:10px;font-weight:700;
+  padding:1px 6px;border-radius:50px;
+  margin-left:4px;vertical-align:middle;
+}
+
+/* SELECTED ITEM CHIP */
+.selected-chip{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--green-light);
+  border:1.5px solid #a3d4b6;
+  border-radius:10px;padding:10px 14px;
+  margin-top:10px;
+  font-size:14px;font-weight:600;color:var(--green);
+}
+.chip-clear{background:none;color:var(--text-muted);font-size:18px;padding:0;line-height:1}
+
+/* PRINT */
 @media print{
-.no-print{display:none!important}
-body{background:#fff}
+  .no-print{display:none!important}
+  body{background:#fff;max-width:100%}
+  .card{box-shadow:none;border:none}
+  header,#toast{display:none}
+}
+
+/* SECTION DIVIDER */
+.section-divider{
+  display:flex;align-items:center;gap:8px;
+  margin:16px 0 10px;
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;
+  color:var(--text-muted);
+}
+.section-divider::before,.section-divider::after{
+  content:'';flex:1;height:1px;background:var(--border);
 }
 </style>
 </head>
 <body>
 
 <header class="no-print">
-<img class="logo" src="https://dummyimage.com/200x200/0b4d2c/ffffff&text=MMB">
-<div>
-<h2 style="margin:0">Maa Manosha Bhandar</h2>
-<div>Smart Grocery Billing</div>
-</div>
+  <div class="logo">🛒</div>
+  <div>
+    <div class="shop-name">Maa Manosha Bhandar</div>
+    <div class="shop-sub">Smart Grocery Billing</div>
+  </div>
 </header>
 
 <div class="tabs no-print">
-<button id="iTab" class="tab active" onclick="openTab('inventory','iTab')">Inventory</button>
-<button id="bTab" class="tab" onclick="openTab('billing','bTab')">Billing</button>
+  <button id="iTab" class="tab active" onclick="openTab('inventory','iTab')">
+    <span class="tab-icon">📦</span>Inventory
+  </button>
+  <button id="bTab" class="tab" onclick="openTab('billing','bTab')">
+    <span class="tab-icon">🧾</span>Billing
+    <span id="billBadge" class="tab-badge" style="display:none">0</span>
+  </button>
 </div>
 
+<!-- INVENTORY TAB -->
 <div id="inventory" class="panel active">
-<div class="card">
-<h3>Add / Edit Product</h3>
-<input id="pname" placeholder="Name">
-<input id="palias" placeholder="Aliases">
-<div class="row">
-<select id="punit">
-<option>kg</option><option>gm</option><option>piece</option>
-<option>pack</option><option>dozen</option><option>tray</option>
-<option>ml</option><option>litre</option>
-</select>
-<input id="pbaseqty" type="number" value="1">
-</div>
-<input id="pprice" type="number" placeholder="Price">
-<button class="btn" onclick="saveProduct()">Save Product</button>
+
+  <div class="card">
+    <div class="card-title" id="formTitle">Add New Product</div>
+
+    <label for="pname">Product Name</label>
+    <input id="pname" placeholder="e.g. Mustard Oil" autocomplete="off">
+
+    <label for="palias">Aliases (comma-separated)</label>
+    <input id="palias" placeholder="e.g. sorser tel, mustard">
+
+    <div class="row">
+      <div>
+        <label for="punit">Unit</label>
+        <select id="punit">
+          <option>kg</option><option>gm</option><option>piece</option>
+          <option>pack</option><option>dozen</option><option>tray</option>
+          <option>ml</option><option>litre</option>
+        </select>
+      </div>
+      <div>
+        <label for="pbaseqty">Base Qty</label>
+        <input id="pbaseqty" type="number" value="1" min="0.01" step="any">
+      </div>
+    </div>
+
+    <label for="pprice">Price (₹)</label>
+    <input id="pprice" type="number" placeholder="e.g. 175" min="0" step="any">
+
+    <input type="hidden" id="editIndex" value="-1">
+    <button class="btn" onclick="saveProduct()">💾 Save Product</button>
+    <button class="btn-outline" id="cancelEdit" style="display:none;margin-top:8px;width:100%" onclick="cancelEdit()">Cancel Edit</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">All Products <span id="productCount" style="color:var(--green)"></span></div>
+    <div id="inventoryList"></div>
+  </div>
 </div>
 
-<div class="card">
-<h3>Inventory</h3>
-<div id="inventoryList"></div>
-</div>
-</div>
-
+<!-- BILLING TAB -->
 <div id="billing" class="panel">
-<div class="card no-print" style="text-align:center">
 
-<button class="mic" onclick="startVoice()">🎤</button>
+  <div class="card no-print">
+    <div class="mic-wrap">
+      <button class="mic" id="micBtn" onclick="startVoice()" title="Tap to speak">🎤</button>
+      <div class="mic-label" id="micLabel">Tap mic to speak</div>
+      <div id="heard"></div>
+    </div>
 
-<div id="heard" style="margin-top:12px"></div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeQty" onclick="setMode('qty')">📏 By Quantity</button>
+      <button class="mode-btn" id="modeAmt" onclick="setMode('amount')">💰 By Amount</button>
+    </div>
 
-<div id="modeBox" class="mode">Mode: Auto</div>
+    <div id="qtyFields">
+      <div class="row">
+        <div>
+          <label for="qty">Quantity</label>
+          <input id="qty" type="number" placeholder="e.g. 2" min="0" step="any">
+        </div>
+        <div>
+          <label for="unit">Unit</label>
+          <select id="unit">
+            <option>kg</option><option>gm</option><option>piece</option>
+            <option>pack</option><option>dozen</option><option>tray</option>
+            <option>ml</option><option>litre</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-<div class="row">
-<input id="qty" placeholder="Qty">
-<select id="unit">
-<option>kg</option><option>gm</option><option>piece</option>
-<option>pack</option><option>dozen</option><option>tray</option>
-<option>ml</option><option>litre</option>
-</select>
+    <div id="amtFields" style="display:none">
+      <label for="amountInput">Amount (₹)</label>
+      <input id="amountInput" type="number" placeholder="e.g. 100" min="0" step="any">
+    </div>
+
+    <label for="search">Search Product</label>
+    <input id="search" placeholder="Type product name…" oninput="searchItems()" autocomplete="off">
+    <div id="suggestions" class="suggestions"></div>
+
+    <div id="selectedChip" style="display:none"></div>
+
+    <button class="btn" onclick="calculate()">Calculate →</button>
+
+    <div id="result"></div>
+  </div>
+
+  <!-- BILL PRINTOUT -->
+  <div class="card" id="billCard">
+    <div class="bill-header">
+      <div class="bill-shop">Maa Manosha Bhandar</div>
+      <div class="bill-shop-sub">Quality Grocery Since Years</div>
+      <div class="bill-date" id="billDate"></div>
+    </div>
+    <div id="billList"></div>
+    <div id="grandRow" style="display:none">
+      <div class="grand-row">
+        <div class="grand-label">Total</div>
+        <div class="grand-amount" id="grand">₹0</div>
+      </div>
+    </div>
+    <div class="bill-actions no-print" id="billActions" style="display:none">
+      <button class="btn btn-clear" onclick="clearBill()">🗑 Clear</button>
+      <button class="btn" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
 </div>
 
-<input id="amountInput" type="number" placeholder="Amount">
-
-<input id="search" placeholder="Search item manually" oninput="searchItems()">
-
-<div id="suggestions" class="suggestions"></div>
-
-<button class="btn" onclick="calculate()">Calculate</button>
-
-<div id="result"></div>
-
-</div>
-
-<div class="card">
-<h2 style="text-align:center">Maa Manosha Bhandar</h2>
-<div id="billDate"></div>
-<div id="billList"></div>
-<div class="big" id="grand">₹0</div>
-
-<div class="no-print">
-<button class="btn" onclick="window.print()">Print Bill</button>
-<button class="btn" onclick="clearBill()">Clear Bill</button>
-</div>
-
-</div>
-</div>
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script>
+const STORE="mmb_store_v2";
+const BILL="mmb_bill_v2";
 
-const STORE="mmb_store";
-const BILL="mmb_bill";
-
-let products=JSON.parse(localStorage.getItem(STORE)) || [
-{name:"Egg",aliases:["egg","dim"],baseQty:30,unit:"piece",price:210},
-{name:"Maida",aliases:["maida","moyda","noida"],baseQty:1,unit:"kg",price:34},
-{name:"Sugar",aliases:["sugar","chini"],baseQty:1,unit:"kg",price:48},
-{name:"Maggi",aliases:["maggi","maggie"],baseQty:1,unit:"pack",price:7},
-{name:"Gobindo Bhog Rice",aliases:["rice","chal"],baseQty:1,unit:"kg",price:155},
-{name:"Mustard Oil Soloni",aliases:["mustard oil","sorser tel"],baseQty:1,unit:"pack",price:175},
-{name:"Tata Salt",aliases:["salt","nun"],baseQty:1,unit:"kg",price:28}
+let products=JSON.parse(localStorage.getItem(STORE))||[
+  {name:"Egg",aliases:["egg","dim","anda"],baseQty:30,unit:"piece",price:210},
+  {name:"Maida",aliases:["maida","moyda"],baseQty:1,unit:"kg",price:34},
+  {name:"Sugar",aliases:["sugar","chini"],baseQty:1,unit:"kg",price:48},
+  {name:"Maggi",aliases:["maggi","maggie","noodles"],baseQty:1,unit:"pack",price:7},
+  {name:"Gobindo Bhog Rice",aliases:["rice","chal","gobindo"],baseQty:1,unit:"kg",price:155},
+  {name:"Mustard Oil Soloni",aliases:["mustard oil","sorser tel","oil"],baseQty:1,unit:"litre",price:175},
+  {name:"Tata Salt",aliases:["salt","nun","loon"],baseQty:1,unit:"kg",price:28}
 ];
 
-let bill=JSON.parse(localStorage.getItem(BILL)) || [];
+let bill=JSON.parse(localStorage.getItem(BILL))||[];
 let selectedItem=null;
 let mode="qty";
 
 function saveStore(){localStorage.setItem(STORE,JSON.stringify(products));}
 function saveBill(){localStorage.setItem(BILL,JSON.stringify(bill));}
 
+// TOAST
+let toastTimer;
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='show '+(type||'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.className='',2500);
+}
+
+// TAB
 function openTab(id,btn){
-document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.getElementById(btn).classList.add('active');
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById(btn).classList.add('active');
 }
 
+// MODE
+function setMode(m){
+  mode=m;
+  document.getElementById('modeQty').classList.toggle('active',m==='qty');
+  document.getElementById('modeAmt').classList.toggle('active',m==='amount');
+  document.getElementById('qtyFields').style.display=m==='qty'?'':'none';
+  document.getElementById('amtFields').style.display=m==='amount'?'':'none';
+}
+
+// INVENTORY RENDER
 function renderInventory(){
-inventoryList.innerHTML='';
-products.forEach((p,i)=>{
-inventoryList.innerHTML+=`
-<div class="product">
-<div>
-<b>${p.name}</b><br>
-${p.baseQty} ${p.unit} = ₹${p.price}
-</div>
-<div>
-<button onclick="editProduct(${i})">Edit</button>
-<button onclick="deleteProduct(${i})">Delete</button>
-</div>
-</div>`;
-});
+  const list=document.getElementById('inventoryList');
+  document.getElementById('productCount').textContent='('+products.length+')';
+  if(!products.length){
+    list.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>No products yet. Add your first product above.</p></div>';
+    return;
+  }
+  list.innerHTML=products.map((p,i)=>`
+    <div class="product">
+      <div style="flex:1;min-width:0">
+        <div class="product-name">${p.name}</div>
+        <div class="product-meta">${p.baseQty} ${p.unit} · ${p.aliases.join(', ') || '—'}</div>
+      </div>
+      <div class="product-price">₹${p.price}</div>
+      <div class="product-actions">
+        <button class="btn-ghost" onclick="editProduct(${i})">✏️</button>
+        <button class="btn-danger" onclick="deleteProduct(${i})">🗑</button>
+      </div>
+    </div>`).join('');
 }
 
+// SAVE PRODUCT
 function saveProduct(){
-const p={
-name:pname.value.trim(),
-aliases:palias.value.split(',').map(x=>x.trim()).filter(Boolean),
-unit:punit.value,
-baseQty:parseFloat(pbaseqty.value||1),
-price:parseFloat(pprice.value)
-};
+  const idx=parseInt(document.getElementById('editIndex').value);
+  const p={
+    name:document.getElementById('pname').value.trim(),
+    aliases:document.getElementById('palias').value.split(',').map(x=>x.trim()).filter(Boolean),
+    unit:document.getElementById('punit').value,
+    baseQty:parseFloat(document.getElementById('pbaseqty').value)||1,
+    price:parseFloat(document.getElementById('pprice').value)
+  };
+  if(!p.name){showToast('Please enter a product name','error');return;}
+  if(!p.price||p.price<=0){showToast('Please enter a valid price','error');return;}
 
-if(!p.name||!p.price)return alert("Invalid");
-
-products.push(p);
-saveStore();
-renderInventory();
-
-pname.value='';
-palias.value='';
-pprice.value='';
+  if(idx>=0){
+    products[idx]=p;
+    showToast('Product updated ✓');
+  }else{
+    const exists=products.findIndex(x=>x.name.toLowerCase()===p.name.toLowerCase());
+    if(exists>=0){showToast('Product already exists. Edit it instead.','error');return;}
+    products.push(p);
+    showToast('Product added ✓');
+  }
+  saveStore();
+  renderInventory();
+  clearForm();
 }
+
+function clearForm(){
+  document.getElementById('pname').value='';
+  document.getElementById('palias').value='';
+  document.getElementById('pprice').value='';
+  document.getElementById('pbaseqty').value='1';
+  document.getElementById('editIndex').value='-1';
+  document.getElementById('formTitle').textContent='Add New Product';
+  document.getElementById('cancelEdit').style.display='none';
+}
+
+function cancelEdit(){clearForm();}
 
 function editProduct(i){
-const p=products[i];
-pname.value=p.name;
-palias.value=p.aliases.join(', ');
-punit.value=p.unit;
-pbaseqty.value=p.baseQty;
-pprice.value=p.price;
-products.splice(i,1);
-saveStore();
-renderInventory();
+  const p=products[i];
+  document.getElementById('pname').value=p.name;
+  document.getElementById('palias').value=p.aliases.join(', ');
+  document.getElementById('punit').value=p.unit;
+  document.getElementById('pbaseqty').value=p.baseQty;
+  document.getElementById('pprice').value=p.price;
+  document.getElementById('editIndex').value=i;
+  document.getElementById('formTitle').textContent='Edit Product';
+  document.getElementById('cancelEdit').style.display='block';
+  openTab('inventory','iTab');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function deleteProduct(i){
-products.splice(i,1);
-saveStore();
-renderInventory();
+  if(!confirm(`Delete "${products[i].name}"?`))return;
+  products.splice(i,1);
+  saveStore();
+  renderInventory();
+  showToast('Product deleted');
 }
 
+// FUZZY SEARCH
 function normalize(t){
-return t.toLowerCase()
-.replaceAll('noida','maida')
-.replaceAll('dim','egg')
-.replaceAll('chal','rice')
-.replaceAll('chini','sugar')
-.replaceAll('taka','rupees');
+  return t.toLowerCase()
+    .replace(/noida/g,'maida').replace(/\bdim\b/g,'egg')
+    .replace(/\bchal\b/g,'rice').replace(/\bchini\b/g,'sugar')
+    .replace(/\btaka\b/g,'rupees').replace(/\brs\b/g,'rupees');
 }
-
-function parseQty(t){
-let q=1;
-const m=t.match(/(\d+(\.\d+)?)/);
-if(m)q=parseFloat(m[1]);
-if(t.includes('half'))q=.5;
-return q;
-}
-
-function parseUnit(t){
-if(t.includes('kg'))return 'kg';
-if(t.includes('gm'))return 'gm';
-if(t.includes('piece')||t.includes('ta'))return 'piece';
-if(t.includes('dozen'))return 'dozen';
-if(t.includes('tray'))return 'tray';
-if(t.includes('pack'))return 'pack';
-if(t.includes('ml'))return 'ml';
-if(t.includes('litre'))return 'litre';
-return 'kg';
-}
-
-function detectMode(t){
-if(t.includes('rupees')||t.includes('rs'))return 'amount';
-return 'qty';
-}
-
 function similarity(a,b){
-a=a.toLowerCase();b=b.toLowerCase();
-let s=0;
-for(let c of a){if(b.includes(c))s++;}
-return s/Math.max(a.length,b.length);
+  a=a.toLowerCase();b=b.toLowerCase();
+  if(b.includes(a))return 1;
+  let s=0;
+  for(let c of a){if(b.includes(c))s++;}
+  return s/Math.max(a.length,b.length);
 }
 
+let searchTimer;
 function searchItems(){
-const q=normalize(search.value);
-suggestions.innerHTML='';
-if(!q)return;
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(_searchItems,80);
+}
 
-let ranked=[];
+function _searchItems(){
+  const raw=document.getElementById('search').value;
+  const q=normalize(raw);
+  const sugg=document.getElementById('suggestions');
+  sugg.innerHTML='';
+  sugg.classList.remove('show');
+  if(!q.trim()){setSelectedItem(null);return;}
 
-products.forEach(p=>{
-let best=similarity(q,p.name);
-p.aliases.forEach(a=>{best=Math.max(best,similarity(q,a));});
-if(best>.2)ranked.push({p,score:best});
-});
+  let ranked=[];
+  products.forEach(p=>{
+    let best=similarity(q,p.name);
+    p.aliases.forEach(a=>{best=Math.max(best,similarity(q,a));});
+    if(best>.2)ranked.push({p,score:best});
+  });
+  ranked.sort((a,b)=>b.score-a.score);
 
-ranked.sort((a,b)=>b.score-a.score);
-
-ranked.slice(0,5).forEach(r=>{
-suggestions.innerHTML+=`
-<div class="s-item" onclick="selectItem('${r.p.name}')">
-${r.p.name}
-</div>`;
-});
-
-if(ranked.length>0)selectItem(ranked[0].p.name);
+  if(!ranked.length)return;
+  sugg.classList.add('show');
+  ranked.slice(0,6).forEach((r,idx)=>{
+    const d=document.createElement('div');
+    d.className='s-item'+(idx===0?' selected':'');
+    d.innerHTML=`<span>${r.p.name}</span><span class="s-price">₹${r.p.price}/${r.p.baseQty}${r.p.unit}</span>`;
+    d.onclick=()=>selectItem(r.p.name);
+    sugg.appendChild(d);
+  });
 }
 
 function selectItem(name){
-selectedItem=products.find(x=>x.name===name);
-search.value=name;
+  selectedItem=products.find(x=>x.name===name);
+  document.getElementById('search').value='';
+  document.getElementById('suggestions').classList.remove('show');
+  document.getElementById('suggestions').innerHTML='';
+  updateChip();
+  document.getElementById('result').innerHTML='';
 }
 
+function setSelectedItem(item){
+  selectedItem=item;
+  updateChip();
+}
+
+function updateChip(){
+  const chip=document.getElementById('selectedChip');
+  if(selectedItem){
+    chip.style.display='flex';
+    chip.innerHTML=`<span>🛍 ${selectedItem.name} — ₹${selectedItem.price}/${selectedItem.baseQty}${selectedItem.unit}</span><button class="chip-clear" onclick="clearSelected()">×</button>`;
+  }else{
+    chip.style.display='none';
+    chip.innerHTML='';
+  }
+}
+
+function clearSelected(){
+  selectedItem=null;
+  updateChip();
+  document.getElementById('result').innerHTML='';
+}
+
+// VOICE
 function startVoice(){
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-const rec=new SR();
-rec.lang='en-IN';
-rec.start();
-
-heard.innerHTML='Listening...';
-
-rec.onresult=function(e){
-let t=normalize(e.results[0][0].transcript);
-
-heard.innerHTML=t;
-
-mode=detectMode(t);
-
-modeBox.innerHTML='Mode: '+mode;
-
-if(mode==='amount'){
-amountInput.value=parseQty(t);
-}else{
-qty.value=parseQty(t);
-unit.value=parseUnit(t);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('Voice not supported in this browser','error');return;}
+  const rec=new SR();
+  rec.lang='en-IN';
+  const btn=document.getElementById('micBtn');
+  const lbl=document.getElementById('micLabel');
+  btn.classList.add('listening');
+  btn.textContent='🛑';
+  lbl.textContent='Listening…';
+  rec.start();
+  rec.onresult=function(e){
+    let t=normalize(e.results[0][0].transcript);
+    document.getElementById('heard').textContent='"'+t+'"';
+    if(t.includes('rupees')||t.includes('amount')){
+      setMode('amount');
+      const m=t.match(/(\d+(\.\d+)?)/);
+      if(m)document.getElementById('amountInput').value=m[1];
+    }else{
+      setMode('qty');
+      const m=t.match(/(\d+(\.\d+)?)/);
+      if(m)document.getElementById('qty').value=m[1];
+      if(t.includes('kg'))document.getElementById('unit').value='kg';
+      else if(t.includes('gm'))document.getElementById('unit').value='gm';
+      else if(t.includes('dozen'))document.getElementById('unit').value='dozen';
+      else if(t.includes('tray'))document.getElementById('unit').value='tray';
+      else if(t.includes('piece')||t.includes('ta'))document.getElementById('unit').value='piece';
+      else if(t.includes('pack'))document.getElementById('unit').value='pack';
+      else if(t.includes('litre'))document.getElementById('unit').value='litre';
+      else if(t.includes('ml'))document.getElementById('unit').value='ml';
+    }
+    // auto-search product name
+    const words=t.replace(/\d+(\.\d+)?/g,'').replace(/kg|gm|piece|dozen|tray|pack|litre|ml|rupees|rs/g,'').trim();
+    if(words){
+      document.getElementById('search').value=words;
+      _searchItems();
+    }
+    if(selectedItem)calculate();
+  };
+  rec.onerror=function(e){showToast('Mic error: '+e.error,'error');};
+  rec.onend=function(){
+    btn.classList.remove('listening');
+    btn.textContent='🎤';
+    lbl.textContent='Tap mic to speak';
+  };
 }
 
-search.value=t;
-
-searchItems();
-
-if(selectedItem)calculate();
-};
-}
-
+// UNIT CONVERSION
 function convert(q,from,to){
-if(from===to)return q;
-if(from==='gm'&&to==='kg')return q/1000;
-if(from==='kg'&&to==='gm')return q*1000;
-if(from==='ml'&&to==='litre')return q/1000;
-if(from==='litre'&&to==='ml')return q*1000;
-if(from==='piece'&&to==='dozen')return q/12;
-if(from==='dozen'&&to==='piece')return q*12;
-return null;
+  if(from===to)return q;
+  const map={
+    'gm_kg':q/1000,'kg_gm':q*1000,
+    'ml_litre':q/1000,'litre_ml':q*1000,
+    'piece_dozen':q/12,'dozen_piece':q*12,
+    'piece_tray':q/30,'tray_piece':q*30
+  };
+  return map[from+'_'+to]??null;
 }
 
+// CALCULATE
 function calculate(){
+  if(!selectedItem){showToast('Please select a product first','error');return;}
+  const res=document.getElementById('result');
 
-if(!selectedItem)return;
+  if(mode==='amount'){
+    const amount=parseFloat(document.getElementById('amountInput').value||0);
+    if(!amount||amount<=0){showToast('Enter a valid amount','error');return;}
+    const qtyCalc=((amount/selectedItem.price)*selectedItem.baseQty).toFixed(3);
+    res.innerHTML=`
+      <div class="result-card">
+        <div class="result-item-name">${selectedItem.name}</div>
+        <div class="result-amount">${qtyCalc} ${selectedItem.unit}</div>
+        <div class="result-sub">for ₹${amount}</div>
+        <button class="btn" onclick="addBill('${selectedItem.name}','${qtyCalc}','${selectedItem.unit}',${amount},'amount')">+ Add to Bill</button>
+      </div>`;
+    return;
+  }
 
-if(mode==='amount'){
-let amount=parseFloat(amountInput.value||0);
+  const q=parseFloat(document.getElementById('qty').value||0);
+  const u=document.getElementById('unit').value;
+  if(!q||q<=0){showToast('Enter a valid quantity','error');return;}
 
-let qtyCalc=((amount/selectedItem.price)*selectedItem.baseQty).toFixed(2);
-
-result.innerHTML=`
-<h2>${selectedItem.name}</h2>
-<div class="big">${qtyCalc} ${selectedItem.unit}</div>
-<div>for ₹${amount}</div>
-<button class="btn" onclick="addBill('${selectedItem.name}','${qtyCalc}','${selectedItem.unit}',${amount},'amount')">
-Add To Bill
-</button>`;
-return;
+  let cq=q;
+  if(u!==selectedItem.unit){
+    cq=convert(q,u,selectedItem.unit);
+    if(cq===null){
+      // special egg handling
+      if(selectedItem.name.toLowerCase().includes('egg')&&u==='piece')cq=q;
+      else{showToast('Cannot convert '+u+' to '+selectedItem.unit,'error');return;}
+    }
+  }
+  const total=((cq/selectedItem.baseQty)*selectedItem.price).toFixed(2);
+  res.innerHTML=`
+    <div class="result-card">
+      <div class="result-item-name">${selectedItem.name}</div>
+      <div class="result-amount">₹${total}</div>
+      <div class="result-sub">${q} ${u}</div>
+      <button class="btn" onclick="addBill('${selectedItem.name}',${q},'${u}',${total},'qty')">+ Add to Bill</button>
+    </div>`;
 }
 
-let q=parseFloat(qty.value||1);
-let u=unit.value;
-
-let cq=q;
-
-if(u!==selectedItem.unit){
-cq=convert(q,u,selectedItem.unit);
-
-if(cq===null){
-if(selectedItem.name==='Egg'){
-if(u==='piece')cq=q;
-else if(u==='tray')cq=q*30;
-}else{
-result.innerHTML='<h3>Invalid conversion</h3>';
-return;
-}
-}
-}
-
-const total=((cq/selectedItem.baseQty)*selectedItem.price).toFixed(2);
-
-result.innerHTML=`
-<h2>${selectedItem.name}</h2>
-<div class="big">₹${total}</div>
-<button class="btn" onclick="addBill('${selectedItem.name}',${q},'${u}',${total},'qty')">
-Add To Bill
-</button>`;
-}
-
+// BILL
 function addBill(item,qty,unit,total,type){
-bill.push({item,qty,unit,total:parseFloat(total),type});
-saveBill();
-renderBill();
-}
-
-function renderBill(){
-billDate.innerHTML=new Date().toLocaleString();
-billList.innerHTML='';
-
-let g=0;
-
-bill.forEach((b,i)=>{
-g+=b.total;
-
-billList.innerHTML+=`
-<div class="bill-item">
-<div>
-<b>${b.item}</b><br>
-${b.type==='amount'?'By Amount':b.qty+' '+b.unit}
-</div>
-<div>
-₹${b.total.toFixed(2)}<br>
-<button class="no-print" onclick="removeBill(${i})">Delete</button>
-</div>
-</div>`;
-});
-
-grand.innerHTML='₹'+g.toFixed(2);
+  bill.push({item,qty,unit,total:parseFloat(total),type});
+  saveBill();
+  renderBill();
+  document.getElementById('result').innerHTML='';
+  clearSelected();
+  document.getElementById('qty').value='';
+  document.getElementById('amountInput').value='';
+  showToast('Added to bill ✓');
 }
 
 function removeBill(i){
-bill.splice(i,1);
-saveBill();
-renderBill();
+  bill.splice(i,1);
+  saveBill();
+  renderBill();
+}
+
+function renderBill(){
+  document.getElementById('billDate').textContent=new Date().toLocaleString('en-IN',{
+    day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
+  });
+
+  const list=document.getElementById('billList');
+  const grandRow=document.getElementById('grandRow');
+  const billActions=document.getElementById('billActions');
+  const badge=document.getElementById('billBadge');
+
+  if(!bill.length){
+    list.innerHTML='<div class="bill-empty">No items yet. Add products using the billing tool above.</div>';
+    grandRow.style.display='none';
+    billActions.style.display='none';
+    badge.style.display='none';
+    document.getElementById('grand').textContent='₹0';
+    return;
+  }
+
+  let g=0;
+  list.innerHTML=bill.map((b,i)=>{
+    g+=b.total;
+    return `<div class="bill-item">
+      <div>
+        <div class="bill-item-name">${b.item}</div>
+        <div class="bill-item-qty">${b.type==='amount'?'By Amount':b.qty+' '+b.unit}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="bill-item-price">₹${b.total.toFixed(2)}</div>
+        <button class="btn-danger no-print" onclick="removeBill(${i})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('grand').textContent='₹'+g.toFixed(2);
+  grandRow.style.display='block';
+  billActions.style.display='flex';
+  badge.style.display='inline-block';
+  badge.textContent=bill.length;
 }
 
 function clearBill(){
-bill=[];
-saveBill();
-renderBill();
+  if(!confirm('Clear the entire bill?'))return;
+  bill=[];saveBill();renderBill();
+  showToast('Bill cleared');
 }
 
+// INIT
 renderInventory();
 renderBill();
 
 if('serviceWorker' in navigator){
-navigator.serviceWorker.register('service-worker.js');
+  navigator.serviceWorker.register('service-worker.js');
 }
-
 </script>
-
 </body>
 </html>
