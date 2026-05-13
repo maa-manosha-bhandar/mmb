@@ -895,15 +895,16 @@ function startVoice(){
   const btn=document.getElementById('micBtn');
   btn.classList.add('listening'); btn.textContent='🛑';
 
-  let results=[];
-  let pending=2;
+  // Collected transcripts from both passes
+  let allTranscripts=[];
 
-  function tryFinish(){
-    pending--;
-    if(pending>0) return;
-    // Pick best result across both languages
+  // ── Apply best result from collected transcripts ──
+  function applyBest(){
+    btn.classList.remove('listening');
+    btn.textContent='🎤';
+
     let best=null, bestScore=0;
-    for(const alt of results){
+    for(const alt of allTranscripts){
       const cmd=parseVoiceCommand(alt);
       if(cmd.itemQuery){
         const ranked=rankProducts(cmd.itemQuery,0.2);
@@ -914,19 +915,16 @@ function startVoice(){
       }
     }
     // Fallback: use first transcript even without item match
-    if(!best && results.length){
-      const cmd=parseVoiceCommand(results[0]);
+    if(!best && allTranscripts.length){
+      const cmd=parseVoiceCommand(allTranscripts[0]);
       best={cmd,ranked:[]};
     }
     if(!best) return;
 
     const {cmd,ranked}=best;
     document.getElementById('heard').textContent='"'+cmd.raw+'"';
-
-    // Auto-set mode
     setMode(cmd.mode, true);
 
-    // Fill values
     if(cmd.mode==='amount'){
       if(cmd.number) document.getElementById('amountInput').value=cmd.number;
     }else{
@@ -934,7 +932,6 @@ function startVoice(){
       if(cmd.unit)   document.getElementById('unit').value=cmd.unit;
     }
 
-    // Auto-select best item
     if(ranked.length){
       selectedItem=ranked[0].p;
       updateChip();
@@ -958,7 +955,6 @@ function startVoice(){
         qrow.querySelector('.vr-label').textContent='Quantity';
         qrow.querySelector('.vr-val').textContent=(cmd.number||'?')+' '+(cmd.unit||'');
       }
-
       setTimeout(()=>calculate(true),150);
     }else{
       if(cmd.itemQuery){
@@ -971,37 +967,33 @@ function startVoice(){
     }
   }
 
-  let doneCount=0;
-  function makeRec(lang){
-    const rec=new SR();
-    rec.lang=lang; rec.interimResults=false; rec.maxAlternatives=3;
-    rec.onresult=function(e){
-      for(let i=0;i<e.results[0].length;i++)
-        results.push(e.results[0][i].transcript);
-    };
-    rec.onerror=function(e){
-      if(e.error!=='no-speech') showToast('Mic ('+lang+'): '+e.error,'error');
-    };
-    rec.onend=function(){
-      doneCount++;
-      if(doneCount>=2){
-        btn.classList.remove('listening');
-        btn.textContent='🎤';
-      }
-      tryFinish();
-    };
-    return rec;
+  // ── Run a single recognition pass, return Promise<transcripts[]> ──
+  function runRec(lang){
+    return new Promise(resolve=>{
+      const rec=new SR();
+      rec.lang=lang; rec.interimResults=false; rec.maxAlternatives=5;
+      const got=[];
+      rec.onresult=function(e){
+        for(let i=0;i<e.results[0].length;i++)
+          got.push(e.results[0][i].transcript);
+      };
+      rec.onerror=function(){ resolve([]); }; // any error → empty, continue
+      rec.onend=function(){ resolve(got); };
+      try{ rec.start(); }catch(e){ resolve([]); }
+    });
   }
 
-  const recEN=makeRec('en-IN');
-  const recBN=makeRec('bn-IN');
+  // ── Sequential: en-IN first, then bn-IN, then pick winner ──
+  (async()=>{
+    const enResults = await runRec('en-IN');
+    allTranscripts.push(...enResults);
 
-  // Start Bengali ~300ms after English to avoid hardware conflict on mobile
-  recEN.start();
-  setTimeout(()=>{
-    try{ recBN.start(); }
-    catch(e){ pending--; } // bn-IN not supported on this device — skip gracefully
-  },300);
+    // Only run Bengali pass if English got nothing useful OR always for better coverage
+    const bnResults = await runRec('bn-IN');
+    allTranscripts.push(...bnResults);
+
+    applyBest();
+  })();
 }
 
 // ════════════════════════════════════════════
