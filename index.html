@@ -53,8 +53,6 @@ input::placeholder{color:#b0a898}
 button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 .btn{background:var(--green);color:#fff;padding:13px 16px;border-radius:10px;width:100%;font-size:15px;font-weight:600;margin-top:12px;transition:background .2s,transform .1s}
 .btn:hover{background:var(--green-mid)}.btn:active{transform:scale(.98)}
-.btn-sm{background:var(--green);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;transition:background .2s}
-.btn-sm:hover{background:var(--green-mid)}
 .btn-outline{background:transparent;border:1.5px solid var(--green);color:var(--green);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;transition:all .2s}
 .btn-outline:hover{background:var(--green-light)}
 .btn-danger{background:var(--red-light);color:var(--red);border:1.5px solid #fecaca;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:600}
@@ -75,8 +73,11 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 /* ── MIC AREA ── */
 .mic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0 12px}
 .mic{width:76px;height:76px;border-radius:50%;font-size:28px;background:var(--green);color:#fff;box-shadow:0 4px 18px rgba(11,77,44,.3);transition:all .2s;display:flex;align-items:center;justify-content:center}
-.mic:hover{transform:scale(1.05)}.mic.listening{background:var(--red);animation:pulse 1s infinite}
+.mic:hover{transform:scale(1.05)}
+.mic.listening{background:var(--red);animation:pulse 1s infinite}
+.mic.processing{background:var(--gold);animation:pulse-gold 1s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}70%{box-shadow:0 0 0 16px rgba(192,57,43,0)}100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}}
+@keyframes pulse-gold{0%{box-shadow:0 0 0 0 rgba(200,150,42,.5)}70%{box-shadow:0 0 0 16px rgba(200,150,42,0)}100%{box-shadow:0 0 0 0 rgba(200,150,42,0)}}
 .mic-hint{font-size:12px;color:var(--muted);font-weight:500;text-align:center;line-height:1.5}
 #heard{font-size:13px;color:var(--green);font-style:italic;min-height:18px;text-align:center;max-width:100%;word-break:break-word}
 
@@ -227,7 +228,8 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
     <div class="mic-wrap">
       <button class="mic" id="micBtn" onclick="startVoice()">🎤</button>
       <div class="mic-hint">
-        Tap &amp; say: <br><em>"10 taka r chal"</em> or <em>"500 gm maida"</em>
+        Tap &amp; say: <br><em>"10 taka r chal"</em> or <em>"500 gm maida"</em><br>
+        <small style="opacity: 0.7;">(Tap again to stop & process)</small>
       </div>
       <div id="heard"></div>
     </div>
@@ -321,9 +323,6 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 <div id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════
-//  DATA & INDEXED DB (Acts like SQLite offline)
-// ════════════════════════════════════════════
 const STORE_KEY = 'mmb_store_v3';
 const BILL_KEY  = 'mmb_bill_v3';
 const DB_NAME   = 'MaaManosha';
@@ -336,8 +335,7 @@ function openDB(){
     const req=indexedDB.open(DB_NAME,DB_VER);
     req.onupgradeneeded=function(e){
       const db=e.target.result;
-      if(!db.objectStoreNames.contains('kv'))
-        db.createObjectStore('kv');
+      if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
     };
     req.onsuccess=function(e){_db=e.target.result;res(_db);};
     req.onerror=function(e){rej(e);};
@@ -360,196 +358,187 @@ function idbSet(key,val){
   }));
 }
 
-// Keeping the original huge product array intact.
+// Categories stripped entirely
 const DEFAULT_PRODUCTS = [
-  {name:"Maida",aliases:["maida","moyda","flour"],baseQty:1,unit:"kg",price:34,cat:"grains"},
-  {name:"Atta (Lalji)",aliases:["atta lalji","lalji atta","wheat flour lalji"],baseQty:1,unit:"kg",price:40,cat:"grains"},
-  {name:"Atta (Sabitri)",aliases:["atta sabitri","sabitri atta","wheat sabitri"],baseQty:1,unit:"kg",price:41,cat:"grains"},
-  {name:"Mustard Oil (Soloni)",aliases:["mustard oil soloni","sorser tel soloni","soloni tel","soloni oil"],baseQty:1,unit:"pack",price:175,cat:"oil"},
-  {name:"Mustard Oil 200ml",aliases:["mustard oil 200","sorser tel 200","sorse tel"],baseQty:1,unit:"piece",price:45,cat:"oil"},
-  {name:"Mustard Oil 500ml",aliases:["mustard oil 500","sorser tel 500","sorse tel 500"],baseQty:1,unit:"piece",price:93,cat:"oil"},
-  {name:"Muri (Small)",aliases:["muri","puffed rice","muri pack","murmure"],baseQty:1,unit:"pack",price:10,cat:"snacks"},
-  {name:"Muri 500gm",aliases:["muri 500","muri bada","muri big"],baseQty:1,unit:"pack",price:28,cat:"snacks"},
-  {name:"Refine Oil 200ml",aliases:["refine oil 200","refined oil small","refine tel 200"],baseQty:1,unit:"pack",price:32,cat:"oil"},
-  {name:"Refine Oil 500ml",aliases:["refine oil 500","refined oil 500","refine tel"],baseQty:1,unit:"pack",price:70,cat:"oil"},
-  {name:"Musur Dal",aliases:["musur dal","masoor dal","red lentil","lal dal"],baseQty:1,unit:"kg",price:104,cat:"dal"},
-  {name:"Mug Dal",aliases:["mug dal","moong dal","mung dal","green lentil"],baseQty:1,unit:"kg",price:106,cat:"dal"},
-  {name:"Chana Dal",aliases:["chana dal","cholar dal","bengal gram","chola dal"],baseQty:1,unit:"kg",price:80,cat:"dal"},
-  {name:"Torka Dal",aliases:["torka dal","tarka dal","arhar dal","toor dal"],baseQty:1,unit:"kg",price:80,cat:"dal"},
-  {name:"Kolai Dal Bhanga",aliases:["kolai dal bhanga","kolai bhanga","urad dal split","mash dal"],baseQty:1,unit:"kg",price:140,cat:"dal"},
-  {name:"Kolai Dal Gota",aliases:["kolai dal gota","kolai gota","urad dal whole"],baseQty:1,unit:"kg",price:130,cat:"dal"},
-  {name:"Batasa",aliases:["batasa","mishri batasa","sugar candy"],baseQty:1,unit:"kg",price:70,cat:"sweet"},
-  {name:"Sugar",aliases:["sugar","chini","shakkar"],baseQty:1,unit:"kg",price:48,cat:"staples"},
-  {name:"Dhoop 1",aliases:["dhoop 1","agarbatti 1","incense 1"],baseQty:1,unit:"pack",price:10,cat:"puja"},
-  {name:"Dhoop 2",aliases:["dhoop 2","agarbatti 2","incense 2"],baseQty:1,unit:"pack",price:10,cat:"puja"},
-  {name:"Dhoop 3",aliases:["dhoop 3","dhoop kg","agarbatti kg"],baseQty:1,unit:"kg",price:5,cat:"puja"},
-  {name:"LB Soap Big",aliases:["lb soap big","lifebuoy big","lb bada"],baseQty:1,unit:"piece",price:22,cat:"soap"},
-  {name:"LB Soap Small",aliases:["lb soap small","lifebuoy small","lb chota","lb small"],baseQty:1,unit:"piece",price:10,cat:"soap"},
-  {name:"Vevel Soap",aliases:["vevel","vivel soap","vivel"],baseQty:1,unit:"piece",price:10,cat:"soap"},
-  {name:"Colgate Paste Small",aliases:["colgate paste","colgate small","toothpaste colgate"],baseQty:1,unit:"pack",price:20,cat:"personal"},
-  {name:"Colgate Paste Big",aliases:["colgate big","colgate paste big","colgate bada"],baseQty:1,unit:"pack",price:65,cat:"personal"},
-  {name:"Dabur Paste",aliases:["dabur paste","dabur toothpaste","red paste"],baseQty:1,unit:"pack",price:20,cat:"personal"},
-  {name:"Papad",aliases:["papad","poppadom"],baseQty:1,unit:"pack",price:20,cat:"snacks"},
-  {name:"Top Gold Biscuits",aliases:["top gold biscuit","top gold","anmol top gold"],baseQty:1,unit:"pack",price:30,cat:"biscuit"},
-  {name:"Anmol T-Time Biscuits",aliases:["anmol t time","anmol biscuit","t time biscuit","e time biscuit"],baseQty:1,unit:"pack",price:30,cat:"biscuit"},
-  {name:"Googly Biscuits",aliases:["googly biscuit","googly"],baseQty:1,unit:"pack",price:5,cat:"biscuit"},
-  {name:"Parle-G Biscuits",aliases:["parle g","parleg","parle biscuit"],baseQty:1,unit:"pack",price:5,cat:"biscuit"},
-  {name:"Bati Soap",aliases:["bati soap","washing soap"],baseQty:1,unit:"piece",price:15,cat:"soap"},
-  {name:"Ezee",aliases:["ezee","liquid detergent ezee"],baseQty:1,unit:"piece",price:10,cat:"cleaning"},
-  {name:"Sunlight (Small)",aliases:["sunlight","sunlight small","sunlight powder"],baseQty:1,unit:"pack",price:10,cat:"cleaning"},
-  {name:"Sunlight 500gm",aliases:["sunlight 500","sunlight big","sunlight bada"],baseQty:1,unit:"pack",price:52,cat:"cleaning"},
-  {name:"Chere",aliases:["chere","chira","chire","poha","flattened rice"],baseQty:1,unit:"kg",price:40,cat:"grains"},
-  {name:"Murki",aliases:["murki","murmura meethi","sweet puffed rice"],baseQty:1,unit:"kg",price:65,cat:"sweet"},
-  {name:"Hing",aliases:["hing","asafoetida","heeng"],baseQty:1,unit:"piece",price:15,cat:"spice"},
-  {name:"Dabur Dantmanjan Dust",aliases:["dabur dantmanjan","dantamajon","dabor dantemajon","tooth powder"],baseQty:1,unit:"piece",price:10,cat:"personal"},
-  {name:"Salimar Oil 100gm",aliases:["salimar oil","hair oil salimar"],baseQty:1,unit:"piece",price:70,cat:"personal"},
-  {name:"Jasmine Oil Free Dabur Paste",aliases:["jasmine dabur","dabur jasmine","jasmene oil free","dabur gel"],baseQty:1,unit:"piece",price:37,cat:"personal"},
-  {name:"Sprite 250ml",aliases:["sprite","sprite small","cold drink sprite"],baseQty:1,unit:"piece",price:20,cat:"drinks"},
-  {name:"Kalojere",aliases:["kalojere","kalonji","nigella seeds","black seeds"],baseQty:100,unit:"gm",price:33,cat:"spice"},
-  {name:"Glucon-D 100gm",aliases:["glucon d 100","glucon small","glucose drink small"],baseQty:100,unit:"gm",price:35,cat:"drinks"},
-  {name:"Pickle",aliases:["pickle","achar","achaar"],baseQty:200,unit:"gm",price:45,cat:"condiment"},
-  {name:"Kasundi",aliases:["kasundi","mustard sauce","kasundo"],baseQty:200,unit:"gm",price:55,cat:"condiment"},
-  {name:"Maggi",aliases:["maggi","maggie","noodles","instant noodles"],baseQty:1,unit:"pack",price:7,cat:"snacks"},
-  {name:"No.1 Soap",aliases:["no 1 soap","number one soap","no1 soap"],baseQty:1,unit:"piece",price:22,cat:"soap"},
-  {name:"Bason",aliases:["bason","besan","gram flour","chola ata"],baseQty:1,unit:"kg",price:55,cat:"grains"},
-  {name:"Semui",aliases:["semui","simui","vermicelli","semai"],baseQty:1,unit:"pack",price:10,cat:"grains"},
-  {name:"SF Biscuits",aliases:["sf biscuit","sun feast biscuit","sf","sunfeast"],baseQty:1,unit:"pack",price:45,cat:"biscuit"},
-  {name:"B-Thin Biscuits",aliases:["b thin","bthin","b thin biscuit"],baseQty:1,unit:"pack",price:52,cat:"biscuit"},
-  {name:"Kacha Chola",aliases:["kacha chola","raw chickpea","raw chana"],baseQty:1,unit:"kg",price:80,cat:"dal"},
-  {name:"DAB Paste",aliases:["dab paste","dab toothpaste","dab"],baseQty:1,unit:"piece",price:20,cat:"personal"},
-  {name:"Darchini",aliases:["darchini","cinnamon","dalchini"],baseQty:1,unit:"gm",price:5,cat:"spice"},
-  {name:"SF Pouch Oil",aliases:["sf pouch oil","sf oil","sunflower pouch oil"],baseQty:1,unit:"pack",price:175,cat:"oil"},
-  {name:"Daliya",aliases:["daliya","broken wheat","dalia"],baseQty:200,unit:"gm",price:18,cat:"grains"},
-  {name:"Suji",aliases:["suji","semolina","rava","sooji"],baseQty:1,unit:"pack",price:10,cat:"grains"},
-  {name:"Gobindo Bhog Rice",aliases:["gobindo bhog","gobindo rice","chal","rice","sella rice"],baseQty:1,unit:"kg",price:155,cat:"rice"},
-  {name:"Gol Morich Gota",aliases:["gol morich gota","black pepper whole","golmorich","pepper"],baseQty:100,unit:"gm",price:90,cat:"spice"},
-  {name:"Gota Dhaniya",aliases:["gota daniya","coriander seeds","dhaniya"],baseQty:100,unit:"gm",price:18,cat:"spice"},
-  {name:"Gota Jere",aliases:["gota jere","cumin seeds","jeera gota","jira"],baseQty:100,unit:"gm",price:30,cat:"spice"},
-  {name:"Lonka Gota",aliases:["lonka gota","red chili whole","chili gota","lal morich"],baseQty:100,unit:"gm",price:30,cat:"spice"},
-  {name:"Jaifal",aliases:["jaifal","nutmeg","jaiphal"],baseQty:1,unit:"piece",price:8,cat:"spice"},
-  {name:"Yabetri",aliases:["yabetri","javitri","mace spice"],baseQty:100,unit:"gm",price:350,cat:"spice"},
-  {name:"JK Jowan",aliases:["jk jowan","ajwain","ajwain pack","carom seeds"],baseQty:1,unit:"piece",price:25,cat:"spice"},
-  {name:"Kacha Badam",aliases:["kacha baddam","raw almond","badam","almond raw"],baseQty:100,unit:"gm",price:17,cat:"dry fruit"},
-  {name:"Clove",aliases:["clove","lobongo","cloves","laung"],baseQty:1,unit:"gm",price:3,cat:"spice"},
-  {name:"Methi",aliases:["methi","fenugreek seeds","fenugreek"],baseQty:1,unit:"gm",price:12,cat:"spice"},
-  {name:"Maya Chanachur",aliases:["maya chanachur","chanachur","bhujia mix","namkeen"],baseQty:1,unit:"gm",price:8,cat:"snacks"},
-  {name:"Michri",aliases:["michri","mishri","rock sugar","candy sugar"],baseQty:100,unit:"gm",price:7,cat:"sweet"},
-  {name:"Mombati (Small)",aliases:["mombati","candle small","mombati chota"],baseQty:1,unit:"pack",price:17,cat:"misc"},
-  {name:"Mombati Big",aliases:["mombati big","candle big","bada mombati"],baseQty:1,unit:"pack",price:20,cat:"misc"},
-  {name:"Moton Ghee",aliases:["moton ghee","mutton ghee","ghee moton"],baseQty:1,unit:"pack",price:95,cat:"oil"},
-  {name:"Mouri",aliases:["mouri","fennel seeds","saunf"],baseQty:100,unit:"gm",price:25,cat:"spice"},
-  {name:"Posto",aliases:["posto","poppy seeds","khus khus"],baseQty:1,unit:"gm",price:18,cat:"spice"},
-  {name:"Mustard Oil Loose",aliases:["mustard oil loose","sorser tel loose","khola tel"],baseQty:1,unit:"kg",price:185,cat:"oil"},
-  {name:"Aloo",aliases:["aloo","potato","alu","aalu"],baseQty:1,unit:"kg",price:8,cat:"vegetables"},
-  {name:"Sada Til",aliases:["sada till","white sesame","til","sesame"],baseQty:100,unit:"gm",price:20,cat:"spice"},
-  {name:"Soloni Pouch Mustard Oil",aliases:["soloni pouch","soloni mustard pouch","best oil pouch"],baseQty:1,unit:"pack",price:175,cat:"oil"},
-  {name:"Sahi Jera",aliases:["sahi jera","shah jira","caraway seeds","sahi jeera"],baseQty:10,unit:"gm",price:15,cat:"spice"},
-  {name:"Star Flower",aliases:["star flower","star anise","chakri phool"],baseQty:1,unit:"piece",price:2,cat:"spice"},
-  {name:"Powa Chere",aliases:["powa chere","poha pack","chira pack","beaten rice pack"],baseQty:1,unit:"pack",price:50,cat:"grains"},
-  {name:"Best Choice Oil",aliases:["best choice","best choice oil","best choice pouch"],baseQty:1,unit:"pack",price:175,cat:"oil"},
-  {name:"Yes Dhoop",aliases:["yes dhoop","yes agarbatti","yes incense"],baseQty:1,unit:"pack",price:10,cat:"puja"},
-  {name:"Tea Cup",aliases:["tea cup","disposable cup","cup"],baseQty:1,unit:"piece",price:10,cat:"misc"},
-  {name:"Plate",aliases:["plate","disposable plate","thali"],baseQty:1,unit:"piece",price:15,cat:"misc"},
-  {name:"Glass",aliases:["glass","disposable glass"],baseQty:1,unit:"piece",price:50,cat:"misc"},
-  {name:"Salt Small",aliases:["salt small","namak chota","loon chota","nun chota"],baseQty:1,unit:"kg",price:14,cat:"staples"},
-  {name:"Tata Salt",aliases:["tata salt","tata namak","salt","nun","loon"],baseQty:1,unit:"kg",price:28,cat:"staples"},
-  {name:"F&L Cream",aliases:["fl cream","fair lovely","fair and lovely","glow cream"],baseQty:1,unit:"piece",price:70,cat:"personal"},
-  {name:"Kaju",aliases:["kaju","cashew","cashew nut"],baseQty:100,unit:"gm",price:100,cat:"dry fruit"},
-  {name:"Kismish",aliases:["kismish","raisin","kishmish","dry grapes"],baseQty:100,unit:"gm",price:50,cat:"dry fruit"},
-  {name:"Glucon-D Pack",aliases:["glucon d pack","glucon d","glucose drink"],baseQty:1,unit:"pack",price:35,cat:"drinks"},
-  {name:"Ganesh Chatu",aliases:["gonesh chatu","ganesh chatu","chatu","sattu"],baseQty:1,unit:"pack",price:35,cat:"grains"},
-  {name:"Dove Soap",aliases:["dove soap","dove","dove bar"],baseQty:1,unit:"piece",price:25,cat:"soap"},
-  {name:"Allout Liquid Oil",aliases:["allout","all out liquid","mosquito repellent allout","all out"],baseQty:1,unit:"pack",price:135,cat:"misc"},
-  {name:"Motor Dal",aliases:["motor dal","motor","yellow peas","matar dal"],baseQty:1,unit:"kg",price:65,cat:"dal"},
-  {name:"Suthol",aliases:["suthol","antiseptic liquid","suthol bottle"],baseQty:1,unit:"piece",price:43,cat:"personal"},
-  {name:"Bhujia",aliases:["bujiya","bhujia","namkeen bhujia","bhujiya"],baseQty:100,unit:"gm",price:13,cat:"snacks"},
-  {name:"Bhujia Kg",aliases:["bhujia kg","bhujia kilo","bhujia big"],baseQty:1,unit:"kg",price:120,cat:"snacks"},
-  {name:"T-Time Chanachur",aliases:["t time chachur","t time chanachur","ttime chanachur"],baseQty:1,unit:"kg",price:130,cat:"snacks"},
-  {name:"Best Choice Oil Pouch",aliases:["best choice oil pouch","bc oil","best oil"],baseQty:1,unit:"pack",price:130,cat:"oil"},
-  {name:"Pachporin",aliases:["pachporin","panch phoron","five spice","panch puran"],baseQty:100,unit:"gm",price:23,cat:"spice"},
-  {name:"Rasna",aliases:["rasna","rasna pack","rasna sachet"],baseQty:1,unit:"pack",price:2,cat:"drinks"},
-  {name:"Mustard Powder",aliases:["mustard powder","sorser guro","mustard guro"],baseQty:1,unit:"pack",price:5,cat:"spice"},
-  {name:"Ganesh Chatu 200gm",aliases:["ganesh chatu 200","chatu 200","sattu 200"],baseQty:200,unit:"gm",price:33,cat:"grains"},
-  {name:"Colgate Brush",aliases:["colgate brush","toothbrush colgate","brush colgate"],baseQty:1,unit:"piece",price:15,cat:"personal"},
-  {name:"Colgate Toothbrush 2pc",aliases:["colgate brush 2","toothbrush 2","brush pack 2"],baseQty:2,unit:"piece",price:30,cat:"personal"},
-  {name:"Ujala",aliases:["ujala","fabric whitener","kapor safed"],baseQty:1,unit:"piece",price:10,cat:"cleaning"},
-  {name:"Blade",aliases:["blade","razor blade","shaving blade"],baseQty:1,unit:"pack",price:20,cat:"personal"},
-  {name:"Tata Salt 500gm",aliases:["tata salt 500","tata namak 500","nun 500"],baseQty:500,unit:"gm",price:15,cat:"staples"},
-  {name:"Tata Baking Soda",aliases:["tata baking soda","baking soda","khane ka soda"],baseQty:1,unit:"gm",price:10,cat:"staples"},
-  {name:"Sun Sahi Garam Masala 50gm",aliases:["sun sahi garam masala","garam masala sun","garam masala"],baseQty:50,unit:"gm",price:125,cat:"spice"},
-  {name:"Sun Kashmiri 50gm",aliases:["sun kasmiri","sun kashmiri","kashmiri mirch","kashmiri lal morich"],baseQty:50,unit:"gm",price:65,cat:"spice"},
-  {name:"Sun Meat Masala 50gm",aliases:["sun meatadala","sun meat masala","meat masala","mangsho masala"],baseQty:50,unit:"gm",price:46,cat:"spice"},
-  {name:"Sun Jere 50gm",aliases:["sun jere 50","sun jeera","jeera powder sun","jere guro"],baseQty:50,unit:"gm",price:28,cat:"spice"},
-  {name:"Sun Haldi 50gm",aliases:["sun haldi","turmeric sun","haldi sun","halud powder"],baseQty:50,unit:"gm",price:16,cat:"spice"},
-  {name:"Fevi Gum",aliases:["fevi gum","fevigum","fevi stick","glue"],baseQty:1,unit:"piece",price:5,cat:"misc"},
-  {name:"Lonka Dust 50gm",aliases:["lonka dust","chili powder","red chili powder","lal morich guro"],baseQty:50,unit:"gm",price:25,cat:"spice"},
-  {name:"Jere Dust 50gm",aliases:["jere dust","cumin powder","jeera powder"],baseQty:50,unit:"gm",price:30,cat:"spice"},
-  {name:"Pata",aliases:["pata","biri pata","leaf pack"],baseQty:12,unit:"pack",price:264,cat:"misc"},
-  {name:"Good Day Biscuit",aliases:["good day","good day biscuit","britannia good day"],baseQty:1,unit:"piece",price:10,cat:"biscuit"},
-  {name:"Soyabean (Small)",aliases:["soyabean","soya","soybean small","soya chunk"],baseQty:100,unit:"gm",price:14,cat:"dal"},
-  {name:"Egg",aliases:["egg","dim","anda","deem"],baseQty:1,unit:"tray",price:210,cat:"egg"},
-  {name:"Margo Neem Soap Small",aliases:["margo small","margo soap small","neem soap small"],baseQty:1,unit:"piece",price:10,cat:"soap"},
-  {name:"Margo Neem Soap",aliases:["margo","margo neem","neem soap","margo big"],baseQty:1,unit:"piece",price:28,cat:"soap"},
-  {name:"Chola Bhaja",aliases:["chola bhaja","fried gram","roasted chana"],baseQty:100,unit:"gm",price:80,cat:"snacks"},
-  {name:"Uncle Milk",aliases:["unckk milk","uncle milk","packed milk"],baseQty:1,unit:"piece",price:10,cat:"dairy"},
-  {name:"Gur",aliases:["gur","jaggery","gud","molasses"],baseQty:1,unit:"kg",price:52,cat:"sweet"},
-  {name:"Soyabean Pack 1kg",aliases:["soyabean pack","soya pack","soybean kg"],baseQty:1,unit:"kg",price:114,cat:"dal"},
-  {name:"Mahi",aliases:["mahi","matchstick","machi","maachi"],baseQty:1,unit:"piece",price:7,cat:"misc"},
-  {name:"Kosturi Mathi",aliases:["kosturi mathi","methi kasuri","kasuri methi"],baseQty:1,unit:"pack",price:10,cat:"spice"},
-  {name:"Nokuldana",aliases:["nokuldana","nokul dana","sugar pearls"],baseQty:1,unit:"gm",price:18,cat:"sweet"},
-  {name:"Dhuno",aliases:["dhuno","dhuno 100","resin incense","lobhan"],baseQty:100,unit:"gm",price:50,cat:"puja"},
-  {name:"Kolai Bori",aliases:["kolai bori","bori","urad dal bori","dal bori"],baseQty:500,unit:"gm",price:120,cat:"dal"},
-  {name:"Mathi",aliases:["mathi","moth dal","mathri"],baseQty:100,unit:"gm",price:20,cat:"dal"},
-  {name:"Dhuno Special",aliases:["dhuno special","special lobhan","premium incense resin"],baseQty:100,unit:"gm",price:50,cat:"puja"},
-  {name:"Glucon Orange 250gm",aliases:["glucon orange 250","orange glucon 250","glucose orange small"],baseQty:1,unit:"piece",price:100,cat:"drinks"},
-  {name:"Glucon Orange 400gm",aliases:["glucon orange 400","orange glucon 400","glucose orange big"],baseQty:1,unit:"piece",price:190,cat:"drinks"},
-  {name:"Almond",aliases:["almond","badam","kaath badam"],baseQty:100,unit:"gm",price:90,cat:"dry fruit"},
-  {name:"Energy Drink",aliases:["energy drink","energy","power drink"],baseQty:1,unit:"piece",price:10,cat:"drinks"},
-  {name:"Tejpata 5",aliases:["tejpata 5","bay leaf 5","tej pata"],baseQty:1,unit:"pack",price:5,cat:"spice"},
-  {name:"Tejpata 2",aliases:["tejpata 2","bay leaf 2"],baseQty:1,unit:"pack",price:2,cat:"spice"},
-  {name:"Biri Kalna",aliases:["biri kalna","biri","tobacco leaf","gul"],baseQty:1,unit:"pack",price:10,cat:"misc"},
-  {name:"Carry Bag",aliases:["carry bag","polythene bag","plastic bag","bag"],baseQty:1,unit:"kg",price:185,cat:"misc"},
-  {name:"Swastik Refine Oil",aliases:["swastik refine","swastik oil","swastik refined"],baseQty:1,unit:"kg",price:170,cat:"oil"},
-  {name:"Vim Bar Soap",aliases:["vim bar","vim soap","vim"],baseQty:1,unit:"piece",price:10,cat:"cleaning"},
-  {name:"Ginger Garlic Paste",aliases:["dab ginger paste","ginger garlic paste","aada roshun bata"],baseQty:1,unit:"pack",price:5,cat:"condiment"},
-  {name:"Kanur",aliases:["kanur","kapur","camphor","naphthalene"],baseQty:1,unit:"kg",price:230,cat:"misc"},
-  {name:"Maggi Small",aliases:["maggi 1","maggi small","maggi chota","mini maggi"],baseQty:1,unit:"pack",price:5,cat:"snacks"},
-  {name:"Thala Flower",aliases:["thala flower","decorative flower","artificial flower"],baseQty:1,unit:"pack",price:22,cat:"puja"},
-  {name:"Safed Powi",aliases:["safed powi","white pasta","rice noodle"],baseQty:1,unit:"kg",price:75,cat:"grains"},
-  {name:"Soknio Lanka",aliases:["soknio lanka","dry chili","sukno morich","dried red chili"],baseQty:1,unit:"gm",price:28,cat:"spice"},
-  {name:"Gold Flake Cigarette",aliases:["gold flake","glod flak","cigarette","cigaret"],baseQty:1,unit:"pack",price:85,cat:"misc"},
-  {name:"Raja Marie Biscuit",aliases:["raja meri biscuit","raja marie","marie biscuit"],baseQty:1,unit:"pack",price:10,cat:"biscuit"},
-  {name:"Nihar Oil Small",aliases:["nihar oil","nihar small","nihar coconut"],baseQty:1,unit:"pack",price:10,cat:"personal"},
-  {name:"Khajur",aliases:["khajur","dates","kajur dates","khurma"],baseQty:500,unit:"gm",price:230,cat:"dry fruit"},
-  {name:"Parachute Oil",aliases:["parachute oil","parachute coconut","narkel tel parachute"],baseQty:1,unit:"piece",price:107,cat:"personal"},
-  {name:"Tata Gold Tea",aliases:["tata gold tea","tea tata","tata tea","chai"],baseQty:1,unit:"piece",price:10,cat:"drinks"},
-  {name:"Surf Excel",aliases:["surf excel","surf","detergent surf"],baseQty:1,unit:"piece",price:10,cat:"cleaning"},
-  {name:"Nihar Big Coconut Oil",aliases:["nihar big","nihar coconut big","nihar bada"],baseQty:1,unit:"piece",price:43,cat:"personal"},
-  {name:"Kajur",aliases:["kajur","dates small","khajur 100"],baseQty:100,unit:"gm",price:45,cat:"dry fruit"},
-  {name:"Elachi",aliases:["elachi","elaichi","cardamom","green cardamom"],baseQty:1,unit:"gm",price:5,cat:"spice"},
-  {name:"Bat Papad",aliases:["bat papad","bat shaped papad","special papad"],baseQty:100,unit:"gm",price:70,cat:"snacks"},
-  {name:"Pasta",aliases:["pasta","macaroni"],baseQty:100,unit:"gm",price:6,cat:"grains"},
-  {name:"Mare Biscuit",aliases:["biscuit mare biscuit","mare biscuit","marie"],baseQty:1,unit:"piece",price:35,cat:"biscuit"},
-  {name:"Jaljera",aliases:["jaljera","jal jeera","masala drink","jeera water pack"],baseQty:1,unit:"piece",price:1,cat:"drinks"},
-  {name:"Puchka Papad",aliases:["puchka papad","pani puri papad","puchka"],baseQty:100,unit:"gm",price:8.5,cat:"snacks"},
-  {name:"CTC Tea",aliases:["ctc tea","loose tea","cha","chai pata","tea leaves"],baseQty:100,unit:"gm",price:30,cat:"drinks"},
-  {name:"Wills Flake Cigarette",aliases:["wills flakes","wills cigarette","wills"],baseQty:1,unit:"pack",price:90,cat:"misc"},
-  {name:"Scotch Brite",aliases:["scotch brite","scrubber","cleaning pad"],baseQty:1,unit:"piece",price:10,cat:"cleaning"},
-  {name:"Laxmi Gurakhu",aliases:["laxmi gurakhu","gurakhu","tobacco gum"],baseQty:6,unit:"piece",price:35,cat:"misc"},
-  {name:"Mango Drink",aliases:["mango drink","mango juice","aam drink","frooti"],baseQty:1,unit:"piece",price:10,cat:"drinks"},
-  {name:"Lichi Drink",aliases:["lichues","lichi drink","lychee drink","lichi juice"],baseQty:1,unit:"piece",price:10,cat:"drinks"},
-  {name:"Dyna Soap",aliases:["dyna soap","dyna"],baseQty:1,unit:"piece",price:22,cat:"soap"},
-  {name:"ORS Drink",aliases:["ors drink","ors","electrolyte drink","oral rehydration"],baseQty:1,unit:"piece",price:10,cat:"drinks"},
+  {name:"Maida",aliases:["maida","moyda","flour"],baseQty:1,unit:"kg",price:34},
+  {name:"Atta (Lalji)",aliases:["atta lalji","lalji atta","wheat flour lalji"],baseQty:1,unit:"kg",price:40},
+  {name:"Atta (Sabitri)",aliases:["atta sabitri","sabitri atta","wheat sabitri"],baseQty:1,unit:"kg",price:41},
+  {name:"Mustard Oil (Soloni)",aliases:["mustard oil soloni","sorser tel soloni","soloni tel","soloni oil"],baseQty:1,unit:"pack",price:175},
+  {name:"Mustard Oil 200ml",aliases:["mustard oil 200","sorser tel 200","sorse tel"],baseQty:1,unit:"piece",price:45},
+  {name:"Mustard Oil 500ml",aliases:["mustard oil 500","sorser tel 500","sorse tel 500"],baseQty:1,unit:"piece",price:93},
+  {name:"Muri (Small)",aliases:["muri","puffed rice","muri pack","murmure"],baseQty:1,unit:"pack",price:10},
+  {name:"Muri 500gm",aliases:["muri 500","muri bada","muri big"],baseQty:1,unit:"pack",price:28},
+  {name:"Refine Oil 200ml",aliases:["refine oil 200","refined oil small","refine tel 200"],baseQty:1,unit:"pack",price:32},
+  {name:"Refine Oil 500ml",aliases:["refine oil 500","refined oil 500","refine tel"],baseQty:1,unit:"pack",price:70},
+  {name:"Musur Dal",aliases:["musur dal","masoor dal","red lentil","lal dal"],baseQty:1,unit:"kg",price:104},
+  {name:"Mug Dal",aliases:["mug dal","moong dal","mung dal","green lentil"],baseQty:1,unit:"kg",price:106},
+  {name:"Chana Dal",aliases:["chana dal","cholar dal","bengal gram","chola dal"],baseQty:1,unit:"kg",price:80},
+  {name:"Torka Dal",aliases:["torka dal","tarka dal","arhar dal","toor dal"],baseQty:1,unit:"kg",price:80},
+  {name:"Kolai Dal Bhanga",aliases:["kolai dal bhanga","kolai bhanga","urad dal split","mash dal"],baseQty:1,unit:"kg",price:140},
+  {name:"Kolai Dal Gota",aliases:["kolai dal gota","kolai gota","urad dal whole"],baseQty:1,unit:"kg",price:130},
+  {name:"Batasa",aliases:["batasa","mishri batasa","sugar candy"],baseQty:1,unit:"kg",price:70},
+  {name:"Sugar",aliases:["sugar","chini","shakkar"],baseQty:1,unit:"kg",price:48},
+  {name:"Dhoop 1",aliases:["dhoop 1","agarbatti 1","incense 1"],baseQty:1,unit:"pack",price:10},
+  {name:"Dhoop 2",aliases:["dhoop 2","agarbatti 2","incense 2"],baseQty:1,unit:"pack",price:10},
+  {name:"Dhoop 3",aliases:["dhoop 3","dhoop kg","agarbatti kg"],baseQty:1,unit:"kg",price:5},
+  {name:"LB Soap Big",aliases:["lb soap big","lifebuoy big","lb bada"],baseQty:1,unit:"piece",price:22},
+  {name:"LB Soap Small",aliases:["lb soap small","lifebuoy small","lb chota","lb small"],baseQty:1,unit:"piece",price:10},
+  {name:"Vevel Soap",aliases:["vevel","vivel soap","vivel"],baseQty:1,unit:"piece",price:10},
+  {name:"Colgate Paste Small",aliases:["colgate paste","colgate small","toothpaste colgate"],baseQty:1,unit:"pack",price:20},
+  {name:"Colgate Paste Big",aliases:["colgate big","colgate paste big","colgate bada"],baseQty:1,unit:"pack",price:65},
+  {name:"Dabur Paste",aliases:["dabur paste","dabur toothpaste","red paste"],baseQty:1,unit:"pack",price:20},
+  {name:"Papad",aliases:["papad","poppadom"],baseQty:1,unit:"pack",price:20},
+  {name:"Top Gold Biscuits",aliases:["top gold biscuit","top gold","anmol top gold"],baseQty:1,unit:"pack",price:30},
+  {name:"Anmol T-Time Biscuits",aliases:["anmol t time","anmol biscuit","t time biscuit","e time biscuit"],baseQty:1,unit:"pack",price:30},
+  {name:"Googly Biscuits",aliases:["googly biscuit","googly"],baseQty:1,unit:"pack",price:5},
+  {name:"Parle-G Biscuits",aliases:["parle g","parleg","parle biscuit"],baseQty:1,unit:"pack",price:5},
+  {name:"Bati Soap",aliases:["bati soap","washing soap"],baseQty:1,unit:"piece",price:15},
+  {name:"Ezee",aliases:["ezee","liquid detergent ezee"],baseQty:1,unit:"piece",price:10},
+  {name:"Sunlight (Small)",aliases:["sunlight","sunlight small","sunlight powder"],baseQty:1,unit:"pack",price:10},
+  {name:"Sunlight 500gm",aliases:["sunlight 500","sunlight big","sunlight bada"],baseQty:1,unit:"pack",price:52},
+  {name:"Chere",aliases:["chere","chira","chire","poha","flattened rice"],baseQty:1,unit:"kg",price:40},
+  {name:"Murki",aliases:["murki","murmura meethi","sweet puffed rice"],baseQty:1,unit:"kg",price:65},
+  {name:"Hing",aliases:["hing","asafoetida","heeng"],baseQty:1,unit:"piece",price:15},
+  {name:"Dabur Dantmanjan Dust",aliases:["dabur dantmanjan","dantamajon","dabor dantemajon","tooth powder"],baseQty:1,unit:"piece",price:10},
+  {name:"Salimar Oil 100gm",aliases:["salimar oil","hair oil salimar"],baseQty:1,unit:"piece",price:70},
+  {name:"Jasmine Oil Free Dabur Paste",aliases:["jasmine dabur","dabur jasmine","jasmene oil free","dabur gel"],baseQty:1,unit:"piece",price:37},
+  {name:"Sprite 250ml",aliases:["sprite","sprite small","cold drink sprite"],baseQty:1,unit:"piece",price:20},
+  {name:"Kalojere",aliases:["kalojere","kalonji","nigella seeds","black seeds"],baseQty:100,unit:"gm",price:33},
+  {name:"Glucon-D 100gm",aliases:["glucon d 100","glucon small","glucose drink small"],baseQty:100,unit:"gm",price:35},
+  {name:"Pickle",aliases:["pickle","achar","achaar"],baseQty:200,unit:"gm",price:45},
+  {name:"Kasundi",aliases:["kasundi","mustard sauce","kasundo"],baseQty:200,unit:"gm",price:55},
+  {name:"Maggi",aliases:["maggi","maggie","noodles","instant noodles"],baseQty:1,unit:"pack",price:7},
+  {name:"No.1 Soap",aliases:["no 1 soap","number one soap","no1 soap"],baseQty:1,unit:"piece",price:22},
+  {name:"Bason",aliases:["bason","besan","gram flour","chola ata"],baseQty:1,unit:"kg",price:55},
+  {name:"Semui",aliases:["semui","simui","vermicelli","semai"],baseQty:1,unit:"pack",price:10},
+  {name:"SF Biscuits",aliases:["sf biscuit","sun feast biscuit","sf","sunfeast"],baseQty:1,unit:"pack",price:45},
+  {name:"B-Thin Biscuits",aliases:["b thin","bthin","b thin biscuit"],baseQty:1,unit:"pack",price:52},
+  {name:"Kacha Chola",aliases:["kacha chola","raw chickpea","raw chana"],baseQty:1,unit:"kg",price:80},
+  {name:"DAB Paste",aliases:["dab paste","dab toothpaste","dab"],baseQty:1,unit:"piece",price:20},
+  {name:"Darchini",aliases:["darchini","cinnamon","dalchini"],baseQty:1,unit:"gm",price:5},
+  {name:"SF Pouch Oil",aliases:["sf pouch oil","sf oil","sunflower pouch oil"],baseQty:1,unit:"pack",price:175},
+  {name:"Daliya",aliases:["daliya","broken wheat","dalia"],baseQty:200,unit:"gm",price:18},
+  {name:"Suji",aliases:["suji","semolina","rava","sooji"],baseQty:1,unit:"pack",price:10},
+  {name:"Gobindo Bhog Rice",aliases:["gobindo bhog","gobindo rice","chal","rice","sella rice"],baseQty:1,unit:"kg",price:155},
+  {name:"Gol Morich Gota",aliases:["gol morich gota","black pepper whole","golmorich","pepper"],baseQty:100,unit:"gm",price:90},
+  {name:"Gota Dhaniya",aliases:["gota daniya","coriander seeds","dhaniya"],baseQty:100,unit:"gm",price:18},
+  {name:"Gota Jere",aliases:["gota jere","cumin seeds","jeera gota","jira"],baseQty:100,unit:"gm",price:30},
+  {name:"Lonka Gota",aliases:["lonka gota","red chili whole","chili gota","lal morich"],baseQty:100,unit:"gm",price:30},
+  {name:"Jaifal",aliases:["jaifal","nutmeg","jaiphal"],baseQty:1,unit:"piece",price:8},
+  {name:"Yabetri",aliases:["yabetri","javitri","mace spice"],baseQty:100,unit:"gm",price:350},
+  {name:"JK Jowan",aliases:["jk jowan","ajwain","ajwain pack","carom seeds"],baseQty:1,unit:"piece",price:25},
+  {name:"Kacha Badam",aliases:["kacha baddam","raw almond","badam","almond raw"],baseQty:100,unit:"gm",price:17},
+  {name:"Clove",aliases:["clove","lobongo","cloves","laung"],baseQty:1,unit:"gm",price:3},
+  {name:"Methi",aliases:["methi","fenugreek seeds","fenugreek"],baseQty:1,unit:"gm",price:12},
+  {name:"Maya Chanachur",aliases:["maya chanachur","chanachur","bhujia mix","namkeen"],baseQty:1,unit:"gm",price:8},
+  {name:"Michri",aliases:["michri","mishri","rock sugar","candy sugar"],baseQty:100,unit:"gm",price:7},
+  {name:"Mombati (Small)",aliases:["mombati","candle small","mombati chota"],baseQty:1,unit:"pack",price:17},
+  {name:"Mombati Big",aliases:["mombati big","candle big","bada mombati"],baseQty:1,unit:"pack",price:20},
+  {name:"Moton Ghee",aliases:["moton ghee","mutton ghee","ghee moton"],baseQty:1,unit:"pack",price:95},
+  {name:"Mouri",aliases:["mouri","fennel seeds","saunf"],baseQty:100,unit:"gm",price:25},
+  {name:"Posto",aliases:["posto","poppy seeds","khus khus"],baseQty:1,unit:"gm",price:18},
+  {name:"Mustard Oil Loose",aliases:["mustard oil loose","sorser tel loose","khola tel"],baseQty:1,unit:"kg",price:185},
+  {name:"Aloo",aliases:["aloo","potato","alu","aalu"],baseQty:1,unit:"kg",price:8},
+  {name:"Sada Til",aliases:["sada till","white sesame","til","sesame"],baseQty:100,unit:"gm",price:20},
+  {name:"Soloni Pouch Mustard Oil",aliases:["soloni pouch","soloni mustard pouch","best oil pouch"],baseQty:1,unit:"pack",price:175},
+  {name:"Sahi Jera",aliases:["sahi jera","shah jira","caraway seeds","sahi jeera"],baseQty:10,unit:"gm",price:15},
+  {name:"Star Flower",aliases:["star flower","star anise","chakri phool"],baseQty:1,unit:"piece",price:2},
+  {name:"Powa Chere",aliases:["powa chere","poha pack","chira pack","beaten rice pack"],baseQty:1,unit:"pack",price:50},
+  {name:"Best Choice Oil",aliases:["best choice","best choice oil","best choice pouch"],baseQty:1,unit:"pack",price:175},
+  {name:"Yes Dhoop",aliases:["yes dhoop","yes agarbatti","yes incense"],baseQty:1,unit:"pack",price:10},
+  {name:"Tea Cup",aliases:["tea cup","disposable cup","cup"],baseQty:1,unit:"piece",price:10},
+  {name:"Plate",aliases:["plate","disposable plate","thali"],baseQty:1,unit:"piece",price:15},
+  {name:"Glass",aliases:["glass","disposable glass"],baseQty:1,unit:"piece",price:50},
+  {name:"Salt Small",aliases:["salt small","namak chota","loon chota","nun chota"],baseQty:1,unit:"kg",price:14},
+  {name:"Tata Salt",aliases:["tata salt","tata namak","salt","nun","loon"],baseQty:1,unit:"kg",price:28},
+  {name:"F&L Cream",aliases:["fl cream","fair lovely","fair and lovely","glow cream"],baseQty:1,unit:"piece",price:70},
+  {name:"Kaju",aliases:["kaju","cashew","cashew nut"],baseQty:100,unit:"gm",price:100},
+  {name:"Kismish",aliases:["kismish","raisin","kishmish","dry grapes"],baseQty:100,unit:"gm",price:50},
+  {name:"Glucon-D Pack",aliases:["glucon d pack","glucon d","glucose drink"],baseQty:1,unit:"pack",price:35},
+  {name:"Ganesh Chatu",aliases:["gonesh chatu","ganesh chatu","chatu","sattu"],baseQty:1,unit:"pack",price:35},
+  {name:"Dove Soap",aliases:["dove soap","dove","dove bar"],baseQty:1,unit:"piece",price:25},
+  {name:"Allout Liquid Oil",aliases:["allout","all out liquid","mosquito repellent allout","all out"],baseQty:1,unit:"pack",price:135},
+  {name:"Motor Dal",aliases:["motor dal","motor","yellow peas","matar dal"],baseQty:1,unit:"kg",price:65},
+  {name:"Suthol",aliases:["suthol","antiseptic liquid","suthol bottle"],baseQty:1,unit:"piece",price:43},
+  {name:"Bhujia",aliases:["bujiya","bhujia","namkeen bhujia","bhujiya"],baseQty:100,unit:"gm",price:13},
+  {name:"Bhujia Kg",aliases:["bhujia kg","bhujia kilo","bhujia big"],baseQty:1,unit:"kg",price:120},
+  {name:"T-Time Chanachur",aliases:["t time chachur","t time chanachur","ttime chanachur"],baseQty:1,unit:"kg",price:130},
+  {name:"Best Choice Oil Pouch",aliases:["best choice oil pouch","bc oil","best oil"],baseQty:1,unit:"pack",price:130},
+  {name:"Pachporin",aliases:["pachporin","panch phoron","five spice","panch puran"],baseQty:100,unit:"gm",price:23},
+  {name:"Rasna",aliases:["rasna","rasna pack","rasna sachet"],baseQty:1,unit:"pack",price:2},
+  {name:"Mustard Powder",aliases:["mustard powder","sorser guro","mustard guro"],baseQty:1,unit:"pack",price:5},
+  {name:"Ganesh Chatu 200gm",aliases:["ganesh chatu 200","chatu 200","sattu 200"],baseQty:200,unit:"gm",price:33},
+  {name:"Colgate Brush",aliases:["colgate brush","toothbrush colgate","brush colgate"],baseQty:1,unit:"piece",price:15},
+  {name:"Colgate Toothbrush 2pc",aliases:["colgate brush 2","toothbrush 2","brush pack 2"],baseQty:2,unit:"piece",price:30},
+  {name:"Ujala",aliases:["ujala","fabric whitener","kapor safed"],baseQty:1,unit:"piece",price:10},
+  {name:"Blade",aliases:["blade","razor blade","shaving blade"],baseQty:1,unit:"pack",price:20},
+  {name:"Tata Salt 500gm",aliases:["tata salt 500","tata namak 500","nun 500"],baseQty:500,unit:"gm",price:15},
+  {name:"Tata Baking Soda",aliases:["tata baking soda","baking soda","khane ka soda"],baseQty:1,unit:"gm",price:10},
+  {name:"Sun Sahi Garam Masala 50gm",aliases:["sun sahi garam masala","garam masala sun","garam masala"],baseQty:50,unit:"gm",price:125},
+  {name:"Sun Kashmiri 50gm",aliases:["sun kasmiri","sun kashmiri","kashmiri mirch","kashmiri lal morich"],baseQty:50,unit:"gm",price:65},
+  {name:"Sun Meat Masala 50gm",aliases:["sun meatadala","sun meat masala","meat masala","mangsho masala"],baseQty:50,unit:"gm",price:46},
+  {name:"Sun Jere 50gm",aliases:["sun jere 50","sun jeera","jeera powder sun","jere guro"],baseQty:50,unit:"gm",price:28},
+  {name:"Sun Haldi 50gm",aliases:["sun haldi","turmeric sun","haldi sun","halud powder"],baseQty:50,unit:"gm",price:16},
+  {name:"Fevi Gum",aliases:["fevi gum","fevigum","fevi stick","glue"],baseQty:1,unit:"piece",price:5},
+  {name:"Lonka Dust 50gm",aliases:["lonka dust","chili powder","red chili powder","lal morich guro"],baseQty:50,unit:"gm",price:25},
+  {name:"Jere Dust 50gm",aliases:["jere dust","cumin powder","jeera powder"],baseQty:50,unit:"gm",price:30},
+  {name:"Pata",aliases:["pata","biri pata","leaf pack"],baseQty:12,unit:"pack",price:264},
+  {name:"Good Day Biscuit",aliases:["good day","good day biscuit","britannia good day"],baseQty:1,unit:"piece",price:10},
+  {name:"Soyabean (Small)",aliases:["soyabean","soya","soybean small","soya chunk"],baseQty:100,unit:"gm",price:14},
+  {name:"Egg",aliases:["egg","dim","anda","deem"],baseQty:1,unit:"tray",price:210},
+  {name:"Margo Neem Soap Small",aliases:["margo small","margo soap small","neem soap small"],baseQty:1,unit:"piece",price:10},
+  {name:"Margo Neem Soap",aliases:["margo","margo neem","neem soap","margo big"],baseQty:1,unit:"piece",price:28},
+  {name:"Chola Bhaja",aliases:["chola bhaja","fried gram","roasted chana"],baseQty:100,unit:"gm",price:80},
+  {name:"Uncle Milk",aliases:["unckk milk","uncle milk","packed milk"],baseQty:1,unit:"piece",price:10},
+  {name:"Gur",aliases:["gur","jaggery","gud","molasses"],baseQty:1,unit:"kg",price:52},
+  {name:"Soyabean Pack 1kg",aliases:["soyabean pack","soya pack","soybean kg"],baseQty:1,unit:"kg",price:114},
+  {name:"Mahi",aliases:["mahi","matchstick","machi","maachi"],baseQty:1,unit:"piece",price:7},
+  {name:"Kosturi Mathi",aliases:["kosturi mathi","methi kasuri","kasuri methi"],baseQty:1,unit:"pack",price:10},
+  {name:"Nokuldana",aliases:["nokuldana","nokul dana","sugar pearls"],baseQty:1,unit:"gm",price:18},
+  {name:"Dhuno",aliases:["dhuno","dhuno 100","resin incense","lobhan"],baseQty:100,unit:"gm",price:50},
+  {name:"Kolai Bori",aliases:["kolai bori","bori","urad dal bori","dal bori"],baseQty:500,unit:"gm",price:120},
+  {name:"Mathi",aliases:["mathi","moth dal","mathri"],baseQty:100,unit:"gm",price:20},
+  {name:"Dhuno Special",aliases:["dhuno special","special lobhan","premium incense resin"],baseQty:100,unit:"gm",price:50},
+  {name:"Glucon Orange 250gm",aliases:["glucon orange 250","orange glucon 250","glucose orange small"],baseQty:1,unit:"piece",price:100},
+  {name:"Glucon Orange 400gm",aliases:["glucon orange 400","orange glucon 400","glucose orange big"],baseQty:1,unit:"piece",price:190},
+  {name:"Almond",aliases:["almond","badam","kaath badam"],baseQty:100,unit:"gm",price:90},
+  {name:"Energy Drink",aliases:["energy drink","energy","power drink"],baseQty:1,unit:"piece",price:10},
+  {name:"Tejpata 5",aliases:["tejpata 5","bay leaf 5","tej pata"],baseQty:1,unit:"pack",price:5},
+  {name:"Tejpata 2",aliases:["tejpata 2","bay leaf 2"],baseQty:1,unit:"pack",price:2},
+  {name:"Biri Kalna",aliases:["biri kalna","biri","tobacco leaf","gul"],baseQty:1,unit:"pack",price:10},
+  {name:"Carry Bag",aliases:["carry bag","polythene bag","plastic bag","bag"],baseQty:1,unit:"kg",price:185},
+  {name:"Swastik Refine Oil",aliases:["swastik refine","swastik oil","swastik refined"],baseQty:1,unit:"kg",price:170},
+  {name:"Vim Bar Soap",aliases:["vim bar","vim soap","vim"],baseQty:1,unit:"piece",price:10},
+  {name:"Ginger Garlic Paste",aliases:["dab ginger paste","ginger garlic paste","aada roshun bata"],baseQty:1,unit:"pack",price:5},
+  {name:"Kanur",aliases:["kanur","kapur","camphor","naphthalene"],baseQty:1,unit:"kg",price:230},
+  {name:"Maggi Small",aliases:["maggi 1","maggi small","maggi chota","mini maggi"],baseQty:1,unit:"pack",price:5},
+  {name:"Thala Flower",aliases:["thala flower","decorative flower","artificial flower"],baseQty:1,unit:"pack",price:22},
+  {name:"Safed Powi",aliases:["safed powi","white pasta","rice noodle"],baseQty:1,unit:"kg",price:75},
+  {name:"Soknio Lanka",aliases:["soknio lanka","dry chili","sukno morich","dried red chili"],baseQty:1,unit:"gm",price:28},
+  {name:"Gold Flake Cigarette",aliases:["gold flake","glod flak","cigarette","cigaret"],baseQty:1,unit:"pack",price:85},
+  {name:"Raja Marie Biscuit",aliases:["raja meri biscuit","raja marie","marie biscuit"],baseQty:1,unit:"pack",price:10},
+  {name:"Nihar Oil Small",aliases:["nihar oil","nihar small","nihar coconut"],baseQty:1,unit:"pack",price:10},
+  {name:"Khajur",aliases:["khajur","dates","kajur dates","khurma"],baseQty:500,unit:"gm",price:230},
+  {name:"Parachute Oil",aliases:["parachute oil","parachute coconut","narkel tel parachute"],baseQty:1,unit:"piece",price:107},
+  {name:"Tata Gold Tea",aliases:["tata gold tea","tea tata","tata tea","chai"],baseQty:1,unit:"piece",price:10},
+  {name:"Surf Excel",aliases:["surf excel","surf","detergent surf"],baseQty:1,unit:"piece",price:10},
+  {name:"Nihar Big Coconut Oil",aliases:["nihar big","nihar coconut big","nihar bada"],baseQty:1,unit:"piece",price:43},
+  {name:"Kajur",aliases:["kajur","dates small","khajur 100"],baseQty:100,unit:"gm",price:45},
+  {name:"Elachi",aliases:["elachi","elaichi","cardamom","green cardamom"],baseQty:1,unit:"gm",price:5},
+  {name:"Bat Papad",aliases:["bat papad","bat shaped papad","special papad"],baseQty:100,unit:"gm",price:70},
+  {name:"Pasta",aliases:["pasta","macaroni"],baseQty:100,unit:"gm",price:6},
+  {name:"Mare Biscuit",aliases:["biscuit mare biscuit","mare biscuit","marie"],baseQty:1,unit:"piece",price:35},
+  {name:"Jaljera",aliases:["jaljera","jal jeera","masala drink","jeera water pack"],baseQty:1,unit:"piece",price:1},
+  {name:"Puchka Papad",aliases:["puchka papad","pani puri papad","puchka"],baseQty:100,unit:"gm",price:8.5},
+  {name:"CTC Tea",aliases:["ctc tea","loose tea","cha","chai pata","tea leaves"],baseQty:100,unit:"gm",price:30},
+  {name:"Wills Flake Cigarette",aliases:["wills flakes","wills cigarette","wills"],baseQty:1,unit:"pack",price:90},
+  {name:"Scotch Brite",aliases:["scotch brite","scrubber","cleaning pad"],baseQty:1,unit:"piece",price:10},
+  {name:"Laxmi Gurakhu",aliases:["laxmi gurakhu","gurakhu","tobacco gum"],baseQty:6,unit:"piece",price:35},
+  {name:"Mango Drink",aliases:["mango drink","mango juice","aam drink","frooti"],baseQty:1,unit:"piece",price:10},
+  {name:"Lichi Drink",aliases:["lichues","lichi drink","lychee drink","lichi juice"],baseQty:1,unit:"piece",price:10},
+  {name:"Dyna Soap",aliases:["dyna soap","dyna"],baseQty:1,unit:"piece",price:22},
+  {name:"ORS Drink",aliases:["ors drink","ors","electrolyte drink","oral rehydration"],baseQty:1,unit:"piece",price:10}
 ];
-
-const CATS = {
-  grains:"🌾 Grains", rice:"🍚 Rice", dal:"🫘 Dal", oil:"🛢 Oil",
-  spice:"🌶 Spices", snacks:"🍿 Snacks", biscuit:"🍪 Biscuits",
-  sweet:"🍬 Sweets", soap:"🧼 Soap", personal:"💆 Personal",
-  cleaning:"🧹 Cleaning", drinks:"🥤 Drinks", puja:"🪔 Puja",
-  condiment:"🫙 Condiments", "dry fruit":"🥜 Dry Fruits",
-  dairy:"🥛 Dairy", egg:"🥚 Eggs", vegetables:"🥔 Vegetables", misc:"📦 Misc"
-};
 
 let products = DEFAULT_PRODUCTS.map(p=>({...p}));
 let bill     = [];
@@ -621,7 +610,7 @@ function renderInventory(){
     return `<div class="product">
       <div style="flex:1;min-width:0">
         <div class="product-name">${p.name}</div>
-        <div class="product-meta">${p.baseQty}${p.unit} = ₹${p.price} · ${CATS[p.cat||'misc']||'Misc'}</div>
+        <div class="product-meta">${p.baseQty}${p.unit} = ₹${p.price}</div>
       </div>
       <div class="product-price">₹${p.price}</div>
       <div class="product-actions">
@@ -639,8 +628,7 @@ function saveProduct(){
     aliases:document.getElementById('palias').value.split(',').map(x=>x.trim()).filter(Boolean),
     unit:document.getElementById('punit').value,
     baseQty:parseFloat(document.getElementById('pbaseqty').value)||1,
-    price:parseFloat(document.getElementById('pprice').value),
-    cat:document.getElementById('pcat')?.value||'misc'
+    price:parseFloat(document.getElementById('pprice').value)
   };
   if(!p.name){showToast('Enter a product name','error');return;}
   if(!p.price||p.price<=0){showToast('Enter a valid price','error');return;}
@@ -679,7 +667,7 @@ function deleteProduct(i){
 }
 
 // ════════════════════════════════════════════
-//  IMPROVED FUZZY SEARCH NORMALIZATION
+//  SEARCH ENGINE
 // ════════════════════════════════════════════
 const NORM_MAP = {
   'taka':'rupees','tka':'rupees','rs':'rupees','tk':'rupees','rupee':'rupees',
@@ -796,7 +784,7 @@ function updateChip(){
 }
 
 // ════════════════════════════════════════════
-//  SMOOTH VOICE RECOGNITION (EN-IN ONLY)
+//  PARSER FOR WHISPER OUTPUT
 // ════════════════════════════════════════════
 function parseVoiceCommand(raw){
   const t = normalize(raw);
@@ -820,74 +808,11 @@ function parseVoiceCommand(raw){
     .replace(/\d+(\.\d+)?/g,' ')
     .replace(/\b(rupees|taka|rs|tk|worth|kg|kilogram|gm|gram|litre|liter|ml|tray|dozen|duj|pack|packet|piece|ta\b|ti\b)\b/g,' ')
     .replace(/\bof\b|\br\b|\bthe\b|\ba\b|\bsome\b/g,' ')
+    .replace(/[^\w\s]/gi, '') // remove punctuation from whisper
     .replace(/\s+/g,' ').trim();
   result.itemQuery = item || null;
 
   return result;
-}
-
-let activeRecognition = null;
-
-function startVoice(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){showToast('Voice not supported in this browser','error');return;}
-
-  const btn=document.getElementById('micBtn');
-  
-  // If already listening, stop it manually
-  if(activeRecognition) {
-    activeRecognition.stop();
-    return;
-  }
-
-  btn.classList.add('listening'); btn.textContent='🛑';
-  activeRecognition = new SR();
-  activeRecognition.lang = 'en-IN';
-  activeRecognition.interimResults = false;
-  activeRecognition.maxAlternatives = 3;
-  
-  // Natural stopping behavior
-  activeRecognition.continuous = false; 
-
-  activeRecognition.onresult = function(e){
-    let bestTranscript = e.results[0][0].transcript;
-    let bestMatch = null;
-    let bestScore = 0;
-
-    // Check all alternatives to find the best product match
-    for(let i=0; i<e.results[0].length; i++){
-      let alt = e.results[0][i].transcript;
-      const cmd = parseVoiceCommand(alt);
-      if(cmd.itemQuery){
-        const ranked = rankProducts(cmd.itemQuery, 0.2);
-        if(ranked.length && ranked[0].score > bestScore){
-          bestScore = ranked[0].score;
-          bestMatch = { cmd, ranked: ranked };
-          bestTranscript = alt;
-        }
-      }
-    }
-
-    if(!bestMatch) {
-      bestMatch = { cmd: parseVoiceCommand(bestTranscript), ranked: [] };
-    }
-
-    applyVoiceResult(bestMatch.cmd, bestMatch.ranked);
-  };
-
-  activeRecognition.onend = function(){
-    btn.classList.remove('listening');
-    btn.textContent='🎤';
-    activeRecognition = null;
-  };
-
-  activeRecognition.onerror = function(){
-    btn.classList.remove('listening');
-    btn.textContent='🎤';
-    activeRecognition = null;
-  };
-
-  try { activeRecognition.start(); } catch(e) {}
 }
 
 function applyVoiceResult(cmd, ranked) {
@@ -901,7 +826,7 @@ function applyVoiceResult(cmd, ranked) {
     if(cmd.unit)   document.getElementById('unit').value=cmd.unit;
   }
 
-  if(ranked.length){
+  if(ranked && ranked.length){
     selectedItem=ranked[0].p;
     updateChip();
     document.getElementById('result').innerHTML='';
@@ -1055,9 +980,105 @@ function clearBill(){
 
 document.getElementById('manualSection').style.display='none';
 manualOpen=false;
-
 loadState();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+</script>
+
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.1';
+
+// Prevent local model loading errors, force remote HF download
+env.allowLocalModels = false;
+
+let transcriber = null;
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+
+window.startVoice = async function() {
+  const btn = document.getElementById('micBtn');
+
+  if (isRecording) {
+    // Tap again to stop and process
+    mediaRecorder.stop();
+    btn.textContent = '⏳';
+    btn.classList.remove('listening');
+    btn.classList.add('processing');
+    document.getElementById('heard').textContent = "Thinking...";
+    return;
+  }
+
+  // Start recording
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = e => { 
+        if (e.data.size > 0) audioChunks.push(e.data); 
+    };
+    
+    mediaRecorder.onstop = async () => {
+      // Release mic immediately
+      stream.getTracks().forEach(t => t.stop()); 
+      await processAudio(audioChunks);
+    };
+    
+    mediaRecorder.start();
+    isRecording = true;
+    btn.classList.add('listening');
+    btn.textContent = '🛑';
+    document.getElementById('heard').textContent = "Listening... Tap to stop";
+  } catch (err) {
+    showToast('Mic access denied', 'error');
+    console.error(err);
+  }
+};
+
+async function processAudio(chunks) {
+  const btn = document.getElementById('micBtn');
+  
+  try {
+    // 1. Convert captured audio into Float32Array at 16kHz for Whisper
+    const audioBlob = new Blob(chunks, { type: 'audio/webm' }); 
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    
+    // Cross-browser AudioContext
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    const audioData = audioBuffer.getChannelData(0);
+
+    // 2. Load Whisper Base Model (takes time on first run)
+    if (!transcriber) {
+      document.getElementById('heard').innerHTML = "Downloading Whisper Base AI (140MB)...<br><small>This only happens once.</small>";
+      transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base');
+    }
+
+    document.getElementById('heard').textContent = "Transcribing...";
+    
+    // 3. Run inference!
+    const output = await transcriber(audioData, {
+        task: 'transcribe', // Translating to English standardizes output
+    });
+
+    const text = output.text.trim();
+    console.log("Whisper Output:", text);
+
+    // 4. Pass back to our app's logic
+    const cmd = parseVoiceCommand(text);
+    const ranked = rankProducts(cmd.itemQuery, 0.2);
+    applyVoiceResult(cmd, ranked);
+
+  } catch (err) {
+    console.error("Whisper Error:", err);
+    showToast('Transcription failed', 'error');
+    document.getElementById('heard').textContent = "Error transcribing. Try again.";
+  } finally {
+    isRecording = false;
+    btn.textContent = '🎤';
+    btn.classList.remove('processing');
+  }
+}
 </script>
 </body>
 </html>
