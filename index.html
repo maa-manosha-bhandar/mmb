@@ -167,11 +167,7 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
   .billing-control{display:none}
 }
 
-/* ── INVENTORY FILTER TAGS ── */
-.filter-tags{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;scrollbar-width:none}
-.filter-tags::-webkit-scrollbar{display:none}
-.ftag{padding:5px 12px;border-radius:50px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s}
-.ftag.active{background:var(--green);color:#fff;border-color:var(--green)}
+/* filter-tags removed */
 </style>
 </head>
 <body>
@@ -229,7 +225,6 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
       <div class="card-title" style="margin-bottom:0">Products <span id="productCount" style="color:var(--green)"></span></div>
     </div>
     <input id="invSearch" class="inv-search" placeholder="🔍 Filter inventory…" oninput="filterInventory()" autocomplete="off">
-    <div id="filterTags" class="filter-tags" style="margin-top:8px"></div>
     <div id="inventoryList"></div>
   </div>
 </div>
@@ -350,6 +345,40 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 // ════════════════════════════════════════════
 const STORE_KEY = 'mmb_store_v3';
 const BILL_KEY  = 'mmb_bill_v3';
+const DB_NAME   = 'MaaManosha';
+const DB_VER    = 1;
+
+// ── IndexedDB wrapper ──
+let _db = null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    if(_db){res(_db);return;}
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=function(e){
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('kv'))
+        db.createObjectStore('kv');
+    };
+    req.onsuccess=function(e){_db=e.target.result;res(_db);};
+    req.onerror=function(e){rej(e);};
+  });
+}
+function idbGet(key){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction('kv','readonly');
+    const req=tx.objectStore('kv').get(key);
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>rej(req.error);
+  }));
+}
+function idbSet(key,val){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction('kv','readwrite');
+    const req=tx.objectStore('kv').put(val,key);
+    req.onsuccess=()=>res();
+    req.onerror=()=>rej(req.error);
+  }));
+}
 
 const DEFAULT_PRODUCTS = [
   {name:"Maida",aliases:["maida","moyda","flour"],baseQty:1,unit:"kg",price:34,cat:"grains"},
@@ -543,16 +572,25 @@ const CATS = {
 };
 
 // ── State ──
-let products = JSON.parse(localStorage.getItem(STORE_KEY)) || DEFAULT_PRODUCTS.map(p=>({...p}));
-let bill     = JSON.parse(localStorage.getItem(BILL_KEY))  || [];
+let products = DEFAULT_PRODUCTS.map(p=>({...p}));
+let bill     = [];
 let selectedItem = null;
 let mode = 'qty';
 let manualOpen = false;
-let invFilter = '';
-let invCatFilter = 'all';
+let invFilter  = '';
 
-function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(products)); }
-function saveBill() { localStorage.setItem(BILL_KEY,  JSON.stringify(bill)); }
+function saveStore(){ idbSet(STORE_KEY, JSON.parse(JSON.stringify(products))).catch(()=>{}); }
+function saveBill()  { idbSet(BILL_KEY,  JSON.parse(JSON.stringify(bill))).catch(()=>{}); }
+
+async function loadState(){
+  try{
+    const [storedProducts, storedBill] = await Promise.all([idbGet(STORE_KEY), idbGet(BILL_KEY)]);
+    if(storedProducts && Array.isArray(storedProducts)) products = storedProducts;
+    if(storedBill    && Array.isArray(storedBill))     bill     = storedBill;
+  }catch(e){ /* use defaults */ }
+  renderInventory();
+  renderBill();
+}
 
 // ════════════════════════════════════════════
 //  TOAST
@@ -597,21 +635,6 @@ function toggleManual(){
 // ════════════════════════════════════════════
 //  INVENTORY RENDER
 // ════════════════════════════════════════════
-function buildCatTags(){
-  const cats = [...new Set(products.map(p=>p.cat||'misc'))];
-  const tags = document.getElementById('filterTags');
-  tags.innerHTML = `<button class="ftag active" onclick="setCatFilter('all')">All</button>` +
-    cats.map(c=>`<button class="ftag" onclick="setCatFilter('${c}')">${CATS[c]||c}</button>`).join('');
-}
-
-function setCatFilter(cat){
-  invCatFilter=cat;
-  document.querySelectorAll('.ftag').forEach(b=>{
-    b.classList.toggle('active', b.textContent.trim()==='All'? cat==='all': b.onclick.toString().includes(`'${cat}'`));
-  });
-  renderInventory();
-}
-
 function filterInventory(){
   invFilter=document.getElementById('invSearch').value.toLowerCase();
   renderInventory();
@@ -619,12 +642,10 @@ function filterInventory(){
 
 function renderInventory(){
   const list=document.getElementById('inventoryList');
-  let filtered=products.filter((p,i)=>{
-    const matchCat = invCatFilter==='all' || (p.cat||'misc')===invCatFilter;
-    const matchText = !invFilter ||
-      p.name.toLowerCase().includes(invFilter) ||
+  let filtered=products.filter(p=>{
+    if(!invFilter) return true;
+    return p.name.toLowerCase().includes(invFilter) ||
       (p.aliases||[]).some(a=>a.toLowerCase().includes(invFilter));
-    return matchCat && matchText;
   });
   document.getElementById('productCount').textContent='('+products.length+')';
   if(!filtered.length){
@@ -670,7 +691,7 @@ function saveProduct(){
     }
     products.push(p); showToast('Product added ✓');
   }
-  saveStore(); buildCatTags(); renderInventory(); clearForm();
+  saveStore(); renderInventory(); clearForm();
 }
 
 function clearForm(){
@@ -698,7 +719,7 @@ function editProduct(i){
 
 function deleteProduct(i){
   if(!confirm(`Delete "${products[i].name}"?`))return;
-  products.splice(i,1); saveStore(); buildCatTags(); renderInventory();
+  products.splice(i,1); saveStore(); renderInventory();
   showToast('Deleted');
 }
 
@@ -870,32 +891,34 @@ function parseVoiceCommand(raw){
 function startVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){showToast('Voice not supported in this browser','error');return;}
-  const rec=new SR();
-  rec.lang='en-IN'; rec.interimResults=false; rec.maxAlternatives=3;
-  const btn=document.getElementById('micBtn');
-  const lbl=document.getElementById('micLabel')||{textContent:''};
-  btn.classList.add('listening'); btn.textContent='🛑';
-  rec.start();
 
-  rec.onresult=function(e){
-    // Try all alternatives, pick best
+  const btn=document.getElementById('micBtn');
+  btn.classList.add('listening'); btn.textContent='🛑';
+
+  let results=[];
+  let pending=2;
+
+  function tryFinish(){
+    pending--;
+    if(pending>0) return;
+    // Pick best result across both languages
     let best=null, bestScore=0;
-    for(let i=0;i<e.results[0].length;i++){
-      const alt=e.results[0][i].transcript;
+    for(const alt of results){
       const cmd=parseVoiceCommand(alt);
       if(cmd.itemQuery){
         const ranked=rankProducts(cmd.itemQuery,0.2);
-        if(ranked.length&&ranked[0].score>bestScore){
+        if(ranked.length && ranked[0].score>bestScore){
           bestScore=ranked[0].score;
           best={cmd,ranked};
         }
       }
     }
     // Fallback: use first transcript even without item match
-    if(!best){
-      const cmd=parseVoiceCommand(e.results[0][0].transcript);
+    if(!best && results.length){
+      const cmd=parseVoiceCommand(results[0]);
       best={cmd,ranked:[]};
     }
+    if(!best) return;
 
     const {cmd,ranked}=best;
     document.getElementById('heard').textContent='"'+cmd.raw+'"';
@@ -917,14 +940,12 @@ function startVoice(){
       updateChip();
       document.getElementById('result').innerHTML='';
 
-      // Show auto badge
       const ab=document.getElementById('autoBadge');
       ab.style.display='inline-flex';
       ab.className='auto-badge '+(cmd.mode==='amount'?'amount-mode':'');
       document.getElementById('autoBadgeText').textContent=
         `Auto: ${cmd.mode==='amount'?'Amount':'Qty'} · ${ranked[0].p.name}`;
 
-      // Show voice result panel
       const vr=document.getElementById('voiceResult');
       vr.classList.add('show');
       document.getElementById('vr-item').textContent=ranked[0].p.name;
@@ -938,26 +959,49 @@ function startVoice(){
         qrow.querySelector('.vr-val').textContent=(cmd.number||'?')+' '+(cmd.unit||'');
       }
 
-      // Auto-calculate immediately
       setTimeout(()=>calculate(true),150);
     }else{
-      // Couldn't identify item — open manual search
       if(cmd.itemQuery){
         document.getElementById('search').value=cmd.itemQuery;
         _doSearch();
         showToast('Could not auto-detect item — please select manually','info');
       }
-      // Show manual section
       manualOpen=true;
       document.getElementById('manualSection').style.display='block';
     }
-  };
+  }
 
-  rec.onerror=function(e){showToast('Mic error: '+e.error,'error');};
-  rec.onend=function(){
-    btn.classList.remove('listening');
-    btn.textContent='🎤';
-  };
+  let doneCount=0;
+  function makeRec(lang){
+    const rec=new SR();
+    rec.lang=lang; rec.interimResults=false; rec.maxAlternatives=3;
+    rec.onresult=function(e){
+      for(let i=0;i<e.results[0].length;i++)
+        results.push(e.results[0][i].transcript);
+    };
+    rec.onerror=function(e){
+      if(e.error!=='no-speech') showToast('Mic ('+lang+'): '+e.error,'error');
+    };
+    rec.onend=function(){
+      doneCount++;
+      if(doneCount>=2){
+        btn.classList.remove('listening');
+        btn.textContent='🎤';
+      }
+      tryFinish();
+    };
+    return rec;
+  }
+
+  const recEN=makeRec('en-IN');
+  const recBN=makeRec('bn-IN');
+
+  // Start Bengali ~300ms after English to avoid hardware conflict on mobile
+  recEN.start();
+  setTimeout(()=>{
+    try{ recBN.start(); }
+    catch(e){ pending--; } // bn-IN not supported on this device — skip gracefully
+  },300);
 }
 
 // ════════════════════════════════════════════
@@ -1086,12 +1130,11 @@ function clearBill(){
 // ════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════
-buildCatTags();
-renderInventory();
-renderBill();
 // Start with manual section hidden (voice auto-opens it if needed)
 document.getElementById('manualSection').style.display='none';
 manualOpen=false;
+
+loadState(); // async: loads from IndexedDB then renders
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
