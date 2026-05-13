@@ -75,9 +75,7 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 .mic{width:76px;height:76px;border-radius:50%;font-size:28px;background:var(--green);color:#fff;box-shadow:0 4px 18px rgba(11,77,44,.3);transition:all .2s;display:flex;align-items:center;justify-content:center}
 .mic:hover{transform:scale(1.05)}
 .mic.listening{background:var(--red);animation:pulse 1s infinite}
-.mic.processing{background:var(--gold);animation:pulse-gold 1s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}70%{box-shadow:0 0 0 16px rgba(192,57,43,0)}100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}}
-@keyframes pulse-gold{0%{box-shadow:0 0 0 0 rgba(200,150,42,.5)}70%{box-shadow:0 0 0 16px rgba(200,150,42,0)}100%{box-shadow:0 0 0 0 rgba(200,150,42,0)}}
 .mic-hint{font-size:12px;color:var(--muted);font-weight:500;text-align:center;line-height:1.5}
 #heard{font-size:13px;color:var(--green);font-style:italic;min-height:18px;text-align:center;max-width:100%;word-break:break-word}
 
@@ -228,8 +226,7 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
     <div class="mic-wrap">
       <button class="mic" id="micBtn" onclick="startVoice()">🎤</button>
       <div class="mic-hint">
-        Tap &amp; say: <br><em>"10 taka r chal"</em> or <em>"500 gm maida"</em><br>
-        <small style="opacity: 0.7;">(Tap again to stop & process)</small>
+        Tap &amp; say: <br><em>"10 taka r chal"</em> or <em>"500 gm maida"</em>
       </div>
       <div id="heard"></div>
     </div>
@@ -323,6 +320,9 @@ button{border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 <div id="toast"></div>
 
 <script>
+// ════════════════════════════════════════════
+//  DATA & INDEXED DB (Acts like SQLite offline)
+// ════════════════════════════════════════════
 const STORE_KEY = 'mmb_store_v3';
 const BILL_KEY  = 'mmb_bill_v3';
 const DB_NAME   = 'MaaManosha';
@@ -358,7 +358,7 @@ function idbSet(key,val){
   }));
 }
 
-// Categories stripped entirely
+// Categories stripped out
 const DEFAULT_PRODUCTS = [
   {name:"Maida",aliases:["maida","moyda","flour"],baseQty:1,unit:"kg",price:34},
   {name:"Atta (Lalji)",aliases:["atta lalji","lalji atta","wheat flour lalji"],baseQty:1,unit:"kg",price:40},
@@ -667,15 +667,22 @@ function deleteProduct(i){
 }
 
 // ════════════════════════════════════════════
-//  SEARCH ENGINE
+//  STRICT SEARCH & ACOUSTIC MAPPING
 // ════════════════════════════════════════════
 const NORM_MAP = {
+  // Money & Units
   'taka':'rupees','tka':'rupees','rs':'rupees','tk':'rupees','rupee':'rupees',
-  'dim':'egg','deem':'egg','chal':'rice','chini':'sugar','loon':'salt','nun':'salt','namak':'salt',
+  
+  // AI Acoustic Mishearings (When Voice API hears English instead of Bengali)
+  'loiter':'maida', 'might a':'maida', 'my the':'maida', 'my da':'maida', 'noida':'maida',
+  'dim':'egg','deem':'egg', 'deal':'dal', 'doll':'dal',
+  'child':'chal', 'chile':'chal', 
+  'sugar':'chini', 'num':'nun', 'namak':'salt',
+  
+  // Bengali -> English Mapping
   'sorser tel':'mustard oil','sorse tel':'mustard oil','tel':'oil',
-  'ata':'flour','atta':'flour','noida':'maida',
-  'daal':'dal','dal':'dal',
-  'aloo':'potato','alu':'potato',
+  'ata':'flour','atta':'flour',
+  'daal':'dal', 'aloo':'potato','alu':'potato',
   'halud':'turmeric','haldi':'turmeric',
   'morich':'chili','lonka':'chili','lal morich':'red chili',
   'cha':'tea','chai':'tea',
@@ -696,39 +703,72 @@ const NORM_MAP = {
 };
 
 function normalize(t){
+  if (!t) return "";
   t = t.toLowerCase().trim();
   const keys = Object.keys(NORM_MAP).sort((a,b)=>b.length-a.length);
   for(const k of keys) t=t.replaceAll(k, NORM_MAP[k]);
   return t;
 }
 
+// Mathematical string similarity (Levenshtein Distance)
+function getSimilarity(a, b) {
+  if (a.length === 0) return b.length === 0 ? 1 : 0;
+  if (b.length === 0) return 0;
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
+  for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1) // insertion/deletion
+        );
+      }
+    }
+  }
+  return 1 - (matrix[b.length][a.length] / Math.max(a.length, b.length));
+}
+
 function scoreMatch(query, product){
   const qn = normalize(query);
-  const pname = product.name.toLowerCase();
-  const aliases = (product.aliases||[]).map(a=>a.toLowerCase());
+  if(!qn) return 0;
+  
+  const pname = normalize(product.name);
+  const aliases = (product.aliases||[]).map(a=>normalize(a));
   const all = [pname, ...aliases];
 
   let best = 0;
   for(const s of all){
-    const sn = normalize(s);
-    if(sn===qn || s===query.toLowerCase()) return 1.0;
-    if(sn.startsWith(qn) || s.startsWith(query.toLowerCase())) best=Math.max(best,0.9);
-    if(sn.includes(qn) || s.includes(query.toLowerCase())) best=Math.max(best,0.8);
+    // 1. Exact match (100% score)
+    if(s === qn) return 1.0;
     
-    const qWords = qn.split(/\s+/).filter(w=>w.length>1);
-    const sWords = sn.split(/\s+/);
-    let hits=0;
-    for(const w of qWords){ if(sWords.some(sw=>sw.includes(w)||w.includes(sw))) hits++; }
-    if(qWords.length>0) best=Math.max(best, (hits/qWords.length)*0.75);
+    // 2. Strict Substring match
+    if(s.includes(qn)) best = Math.max(best, 0.85);
+    if(qn.includes(s)) best = Math.max(best, 0.80);
     
-    let cov=0;
-    for(const c of qn){ if(sn.includes(c)) cov++; }
-    best=Math.max(best, (cov/Math.max(qn.length,sn.length))*0.5);
+    // 3. Word-by-word mathematical similarity
+    const qWords = qn.split(/\s+/).filter(w=>w.length > 2); // Ignore tiny words like "t"
+    const sWords = s.split(/\s+/);
+    
+    if (qWords.length > 0) {
+      let matchScore = 0;
+      for (const qw of qWords) {
+        let bestWordMatch = 0;
+        for (const sw of sWords) {
+          bestWordMatch = Math.max(bestWordMatch, getSimilarity(qw, sw));
+        }
+        matchScore += bestWordMatch;
+      }
+      best = Math.max(best, (matchScore / qWords.length) * 0.90);
+    }
   }
   return best;
 }
 
-function rankProducts(query, threshold=0.25){
+function rankProducts(query, threshold=0.40){
   const results=[];
   for(const p of products){
     const score=scoreMatch(query,p);
@@ -784,7 +824,7 @@ function updateChip(){
 }
 
 // ════════════════════════════════════════════
-//  PARSER FOR WHISPER OUTPUT
+//  NATIVE VOICE RECOGNITION (en-IN)
 // ════════════════════════════════════════════
 function parseVoiceCommand(raw){
   const t = normalize(raw);
@@ -808,11 +848,74 @@ function parseVoiceCommand(raw){
     .replace(/\d+(\.\d+)?/g,' ')
     .replace(/\b(rupees|taka|rs|tk|worth|kg|kilogram|gm|gram|litre|liter|ml|tray|dozen|duj|pack|packet|piece|ta\b|ti\b)\b/g,' ')
     .replace(/\bof\b|\br\b|\bthe\b|\ba\b|\bsome\b/g,' ')
-    .replace(/[^\w\s]/gi, '') // remove punctuation from whisper
+    .replace(/[^\w\s]/gi, '') // remove punctuation
     .replace(/\s+/g,' ').trim();
   result.itemQuery = item || null;
 
   return result;
+}
+
+let activeRecognition = null;
+
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('Voice not supported in this browser','error');return;}
+
+  const btn=document.getElementById('micBtn');
+  
+  if(activeRecognition) {
+    activeRecognition.stop();
+    return;
+  }
+
+  btn.classList.add('listening'); btn.textContent='🛑';
+  document.getElementById('heard').textContent = "Listening...";
+  
+  activeRecognition = new SR();
+  activeRecognition.lang = 'en-IN';
+  activeRecognition.interimResults = false;
+  activeRecognition.maxAlternatives = 3;
+  activeRecognition.continuous = false; // Auto-stops when user stops speaking
+
+  activeRecognition.onresult = function(e){
+    let bestTranscript = e.results[0][0].transcript;
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for(let i=0; i<e.results[0].length; i++){
+      let alt = e.results[0][i].transcript;
+      const cmd = parseVoiceCommand(alt);
+      if(cmd.itemQuery){
+        const ranked = rankProducts(cmd.itemQuery, 0.40); // Strict threshold
+        if(ranked.length && ranked[0].score > bestScore){
+          bestScore = ranked[0].score;
+          bestMatch = { cmd, ranked: ranked };
+          bestTranscript = alt;
+        }
+      }
+    }
+
+    if(!bestMatch) {
+      bestMatch = { cmd: parseVoiceCommand(bestTranscript), ranked: [] };
+    }
+
+    applyVoiceResult(bestMatch.cmd, bestMatch.ranked);
+  };
+
+  activeRecognition.onend = function(){
+    btn.classList.remove('listening');
+    btn.textContent='🎤';
+    activeRecognition = null;
+  };
+
+  activeRecognition.onerror = function(){
+    btn.classList.remove('listening');
+    btn.textContent='🎤';
+    activeRecognition = null;
+    document.getElementById('heard').textContent = "Didn't catch that. Tap to try again.";
+  };
+
+  try { activeRecognition.start(); } catch(e) {}
 }
 
 function applyVoiceResult(cmd, ranked) {
@@ -984,101 +1087,5 @@ loadState();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 </script>
 
-<script type="module">
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.1';
-
-// Prevent local model loading errors, force remote HF download
-env.allowLocalModels = false;
-
-let transcriber = null;
-let isRecording = false;
-let mediaRecorder = null;
-let audioChunks = [];
-
-window.startVoice = async function() {
-  const btn = document.getElementById('micBtn');
-
-  if (isRecording) {
-    // Tap again to stop and process
-    mediaRecorder.stop();
-    btn.textContent = '⏳';
-    btn.classList.remove('listening');
-    btn.classList.add('processing');
-    document.getElementById('heard').textContent = "Thinking...";
-    return;
-  }
-
-  // Start recording
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    
-    mediaRecorder.ondataavailable = e => { 
-        if (e.data.size > 0) audioChunks.push(e.data); 
-    };
-    
-    mediaRecorder.onstop = async () => {
-      // Release mic immediately
-      stream.getTracks().forEach(t => t.stop()); 
-      await processAudio(audioChunks);
-    };
-    
-    mediaRecorder.start();
-    isRecording = true;
-    btn.classList.add('listening');
-    btn.textContent = '🛑';
-    document.getElementById('heard').textContent = "Listening... Tap to stop";
-  } catch (err) {
-    showToast('Mic access denied', 'error');
-    console.error(err);
-  }
-};
-
-async function processAudio(chunks) {
-  const btn = document.getElementById('micBtn');
-  
-  try {
-    // 1. Convert captured audio into Float32Array at 16kHz for Whisper
-    const audioBlob = new Blob(chunks, { type: 'audio/webm' }); 
-    const arrayBuffer = await audioBlob.arrayBuffer();
-    
-    // Cross-browser AudioContext
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    const audioData = audioBuffer.getChannelData(0);
-
-    // 2. Load Whisper Base Model (takes time on first run)
-    if (!transcriber) {
-      document.getElementById('heard').innerHTML = "Downloading Whisper Base AI (140MB)...<br><small>This only happens once.</small>";
-      transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base');
-    }
-
-    document.getElementById('heard').textContent = "Transcribing...";
-    
-    // 3. Run inference!
-    const output = await transcriber(audioData, {
-        task: 'transcribe', // Translating to English standardizes output
-    });
-
-    const text = output.text.trim();
-    console.log("Whisper Output:", text);
-
-    // 4. Pass back to our app's logic
-    const cmd = parseVoiceCommand(text);
-    const ranked = rankProducts(cmd.itemQuery, 0.2);
-    applyVoiceResult(cmd, ranked);
-
-  } catch (err) {
-    console.error("Whisper Error:", err);
-    showToast('Transcription failed', 'error');
-    document.getElementById('heard').textContent = "Error transcribing. Try again.";
-  } finally {
-    isRecording = false;
-    btn.textContent = '🎤';
-    btn.classList.remove('processing');
-  }
-}
-</script>
 </body>
 </html>
